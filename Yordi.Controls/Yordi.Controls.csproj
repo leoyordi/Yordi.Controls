@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFramework>net8.0-windows</TargetFramework>
+	  <UseWindowsForms>true</UseWindowsForms>
+	  <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+	  <Title>Ferramentas para sistemas em geral</Title>
+	  <Authors>Leopoldo Yordi</Authors>
+	  <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+	  <Description>
+		  Ferramentas diversas para uso comum em sistemas Windows Forms.
+		  Exemplos: Tema, posição e dimensionamento. Limpa e habilita controles comuns listados em Control[] ou ControlsCollection. Desenha alguns controles com cantos arredondados.
+	  </Description>
+	  <PackageTags>Yordi;Controls;Ferramentas;Windows Forms;WindowsForms; winforms</PackageTags>
+	  <PackageId>Yordi.Controls</PackageId>
+	  <Version>1.0.0</Version>
+	  <Company>Yordi Sistemas Inteligentes</Company>
+	  <RepositoryUrl>https://github.com/leoyordi/Yordi.Controls</RepositoryUrl>
+	  <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+	  <None Include="README.md" Pack="true" PackagePath="" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Yordi.Tools" Version="1.0.4" />
+  </ItemGroup>
+
+</Project>
