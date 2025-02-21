@@ -1,5 +1,8 @@
 ﻿namespace Yordi.Controls
 {
+    /// <summary>
+    /// Classe para definir a aparência atual do tema
+    /// </summary>
     public class CurrentTheme
     {
         private static Font _font = SystemFonts.DefaultFont;

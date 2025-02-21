@@ -1,5 +1,8 @@
 ﻿namespace Yordi.Controls
 {
+    /// <summary>
+    /// Classe para definir aparência de um tooltip personalizado
+    /// </summary>
     public class CurrentTooltipTheme
     {
         private static Font _font = SystemFonts.DefaultFont;

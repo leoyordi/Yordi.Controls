@@ -2,6 +2,9 @@ using Yordi.Tools;
 
 namespace Yordi.Controls
 {
+    /// <summary>
+    /// Repositório para controles que implementem XYHL (posição e dimensão)
+    /// </summary>
     public class XYHLRepository : FileRepository<IEnumerable<XYHL>>
     {
         private static List<XYHL>? _lista;
@@ -21,6 +24,11 @@ namespace Yordi.Controls
             return instancia;
         }
 
+        /// <summary>
+        /// Salva a posição do controle
+        /// </summary>
+        /// <param name="xyhl"></param>
+        /// <returns></returns>
         public bool Salvar(XYHL xyhl)
         {
             if (xyhl == null) return false;
@@ -38,6 +46,12 @@ namespace Yordi.Controls
             return base.Salvar(_lista);
         }
 
+        /// <summary>
+        /// Retorna a posição do controle, conforme seu nome e o nome do seu controle ancestral
+        /// </summary>
+        /// <param name="nome"></param>
+        /// <param name="form"></param>
+        /// <returns></returns>
         public XYHL? XYHL(string nome, string? form)
         {
             var finds = _lista?.FindAll(m => string.Equals(m.Nome, nome));

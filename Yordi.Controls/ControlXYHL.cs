@@ -5,6 +5,9 @@ using Yordi.Tools;
 
 namespace Yordi.Controls
 {
+    /// <summary>
+    /// Controle que implementa a interface IControlXYHL
+    /// </summary>
     public class ControlXYHL : Control, IControlXYHL
     {
         public event XYHLDelegate? XYHLChanged;
