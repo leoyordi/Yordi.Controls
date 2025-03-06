@@ -14,15 +14,10 @@ namespace Yordi.Controls
         public event MyMessage? MessageEvent;
         public event EventHandler? Load;
 
-        protected bool isMovable;
-        protected bool isResizable;
-        protected EdgeEnum mEdge = EdgeEnum.None;
         protected Point mouseDownLocation;
-        protected IContainer? components = null;
+        public IContainer? components { get; set; } = null;
         private bool _enableDrag;
         private bool _enableMove;
-        protected ToolStripMenuItem? meDimensionar;
-        protected ToolStripMenuItem? meMove;
         private int opacity  = 100;
         private Rectangle areaPath;
         private Pen borderPen = new Pen(ControlPaint.Light(Color.Transparent, 0.0f), 0);
@@ -37,17 +32,48 @@ namespace Yordi.Controls
 
         private void InitializeComponent()
         {
-            isMovable = false;
-            isResizable = false;
+            Moving = false;
+            Resizing = false;
             SetStyle(ControlStyles.ResizeRedraw, true);
             SetStyle(ControlStyles.UserPaint, true);
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
-            ContextMenuVerify();
+            this.ContextMenuVerifyEx();
             SetXYHL();
         }
 
         #endregion
+
+        #region Propriedades
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public IContainer? Components { get => components; set => components = value; }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public ToolStripMenuItem? meDimensionar { get; set; }
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public ToolStripMenuItem? meMove { get; set; }
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public EdgeEnum Edge { get; set; } = EdgeEnum.None;
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool Moving {get; protected set;}
+
+        [Browsable(false)]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public bool Resizing { get; protected set; }
 
         [Category("Customs")]
         public virtual bool HabilitaDimensionar
@@ -56,7 +82,7 @@ namespace Yordi.Controls
             set
             {
                 _enableDrag = value;
-                ContextMenuVerify();
+                this.ContextMenuVerifyEx();
             }
         }
 
@@ -67,11 +93,12 @@ namespace Yordi.Controls
             set
             {
                 _enableMove = value;
-                ContextMenuVerify();
+                this.ContextMenuVerifyEx();
             }
         }
         [Category("Customs")]
         public virtual byte AlphaForDisabled { get; set; } = 50;
+        
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [EditorBrowsable(EditorBrowsableState.Never)]
@@ -146,11 +173,6 @@ namespace Yordi.Controls
             }
         }
 
-        protected internal void Messages(string msg, [CallerMemberName] string origem = "", [CallerLineNumber] int line = 0)
-        {
-            if (!Disposing)
-                MessageEvent?.Invoke(msg, $"{Name}.{origem}", line);
-        }
 
         public new Padding Padding
         {
@@ -168,7 +190,7 @@ namespace Yordi.Controls
         }
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), Browsable(false)]
-        public bool IsRuntime { get => (HabilitaDimensionar && isResizable) || (HabilitaArrastar && isMovable); }
+        public bool IsRuntime { get => (HabilitaDimensionar && Resizing) || (HabilitaArrastar && Moving); }
 
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -184,6 +206,20 @@ namespace Yordi.Controls
                 else
                     SetVisibleCore(value);
             }
+        }
+
+        
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        public bool HasClickSubscribers => _subsClick > 0 || _subsMouseClick > 0;
+        #endregion
+
+
+        protected internal void Message(string msg, [CallerMemberName] string origem = "", [CallerLineNumber] int line = 0)
+        {
+            if (!Disposing)
+                MessageEvent?.Invoke(msg, $"{Name}.{origem}", line);
         }
 
         private void RectanglePath()
@@ -234,114 +270,51 @@ namespace Yordi.Controls
                     base.Padding = new Padding(left, top, right, bottom);
             }
         }
-        protected void ContextMenuVerify()
-        {
-            if ((!HabilitaArrastar && !HabilitaDimensionar))
-                ContextMenuStrip = null;
-            else if (ContextMenuStrip == null)
-            {
-                if (components == null)
-                    components = new Container();
-                ContextMenuStrip = new ContextMenuStrip(components)
-                {
-                    Text = "Alterações",
-                    Font = CurrentTheme.Font,
-                    ForeColor = CurrentTheme.ForeColor,
-                    Name = "menu",
-                    Size = new Size(61, 4),
-                };
-            }
-            VerifyDimensionarMenu();
-            VerifyMoveMenu();
-        }
 
-        private void VerifyDimensionarMenu()
+        #region Eventos
+        private int _subsClick = 0;
+        private int _subsMouseClick = 0;
+
+        public new event EventHandler? Click
         {
-            if (ContextMenuStrip == null || !HabilitaDimensionar)
+            add
             {
-                if (meDimensionar != null)
-                {
-                    if (false.Equals(ContextMenuStrip?.Items.IsReadOnly))
-                    {
-                        if (ContextMenuStrip.Items.Contains(meDimensionar))
-                            ContextMenuStrip.Items.Remove(meDimensionar);
-                    }
-                    meDimensionar.Click -= new EventHandler(MenuDimensionarClick);
-                    meDimensionar.Dispose();
-                    meDimensionar = null;
-                }
+                _subsClick++;
+                base.Click += value;
             }
-            else
+            remove
             {
-                if (meDimensionar == null)
-                {
-                    meDimensionar = new ToolStripMenuItem();
-                    meDimensionar.CheckOnClick = true;
-                    meDimensionar.Name = "meDimensionar";
-                    meDimensionar.Size = new Size(208, 22);
-                    meDimensionar.Text = "Dimensionar";
-                    meDimensionar.Font = CurrentTheme.Font;
-                    meDimensionar.ForeColor = CurrentTheme.ForeColor;
-                }
-                meDimensionar.Click -= new EventHandler(MenuDimensionarClick);
-                meDimensionar.Click += new EventHandler(MenuDimensionarClick);
-                if (false.Equals(ContextMenuStrip?.Items.IsReadOnly))
-                {
-                    if (!ContextMenuStrip.Items.Contains(meDimensionar))
-                        ContextMenuStrip.Items.Add(meDimensionar);
-                }
+                _subsClick--;
+                base.Click -= value;
             }
         }
 
-        private void VerifyMoveMenu()
+        public new event MouseEventHandler? MouseClick
         {
-            if (ContextMenuStrip == null || !HabilitaArrastar)
+            add
             {
-                if (meMove != null)
-                {
-                    if (false.Equals(ContextMenuStrip?.Items.IsReadOnly))
-                    {
-                        if (ContextMenuStrip.Items.Contains(meMove))
-                            ContextMenuStrip.Items.Remove(meMove);
-                    }
-                    meMove.Click -= new EventHandler(MenuMoveClick);
-                    meMove.Dispose();
-                    meMove = null;
-                }
+                _subsMouseClick++;
+                base.MouseClick += value;
             }
-            else
+            remove
             {
-                if (meMove == null)
-                {
-                    meMove = new ToolStripMenuItem();
-                    meMove.CheckOnClick = true;
-                    meMove.Name = "meMove";
-                    meMove.Size = new Size(208, 22);
-                    meMove.Text = "Mover";
-                    meMove.Font = CurrentTheme.Font;
-                    meMove.ForeColor = CurrentTheme.ForeColor;
-                }
-                meMove.Click -= new EventHandler(MenuMoveClick);
-                meMove.Click += new EventHandler(MenuMoveClick);
-                if (false.Equals(ContextMenuStrip?.Items.IsReadOnly))
-                {
-                    if (!ContextMenuStrip.Items.Contains(meMove))
-                        ContextMenuStrip.Items.Add(meMove);
-                }
+                _subsMouseClick--;
+                base.MouseClick -= value;
             }
         }
+
 
         private void Control_VisibleChanged(object? sender, EventArgs e)
         {
             SetXYHL();
         }
 
-        private void MenuMoveClick(object? sender, EventArgs e)
+        public void MenuMoveClick(object? sender, EventArgs e)
         {
-            isMovable = !isMovable;
+            Moving = !Moving;
             if (meMove != null && !meMove.IsDisposed)
-                meMove.Checked = isMovable;
-            if (!isMovable) // se terminou de ajustar
+                meMove.Checked = Moving;
+            if (!Moving) // se terminou de ajustar
             {
                 SaveXYHL();
                 TabStop = false;
@@ -351,17 +324,17 @@ namespace Yordi.Controls
                 TabStop = true;
                 Focus();
             }
-            isResizable = false;
+            Resizing = false;
             if (meDimensionar != null && !meDimensionar.IsDisposed)
-                meDimensionar.Checked = isResizable;
+                meDimensionar.Checked = Resizing;
             Invalidate();
         }
-        private void MenuDimensionarClick(object? sender, EventArgs e)
+        public void MenuDimensionarClick(object? sender, EventArgs e)
         {
-            isResizable = !isResizable;
+            Resizing = !Resizing;
             if (meDimensionar != null && !meDimensionar.IsDisposed)
-                meDimensionar.Checked = isResizable;
-            if (!isResizable) // se terminou de ajustar
+                meDimensionar.Checked = Resizing;
+            if (!Resizing) // se terminou de ajustar
             {
                 SaveXYHL();
                 TabStop = false;
@@ -371,9 +344,9 @@ namespace Yordi.Controls
                 TabStop = true;
                 Focus();
             }
-            isMovable = false;
+            Moving = false;
             if (meMove != null && !meMove.IsDisposed)
-                meMove.Checked = isMovable;
+                meMove.Checked = Moving;
             Invalidate();
         }
 
@@ -397,7 +370,10 @@ namespace Yordi.Controls
         protected override void OnMouseDown(MouseEventArgs e)
         {
             if (!IsRuntime)
+            {
                 base.OnMouseDown(e);
+                this.OnMouseDownEx(e);
+            }
             else
             {
                 if (e.Button == MouseButtons.Left)
@@ -412,22 +388,27 @@ namespace Yordi.Controls
             DefinirCursor(e);
             if (!IsRuntime)
                 base.OnMouseMove(e);
-            else if (this.Capture && mEdge != EdgeEnum.None)
+            else if (this.Capture && Edge != EdgeEnum.None)
                 RedimensionarControle(e);
         }
         protected override void OnMouseUp(MouseEventArgs e)
         {
             if (!IsRuntime)
+            {
                 base.OnMouseUp(e);
+                this.OnMouseUpEx(e);
+            }
             else if (e.Button == MouseButtons.Left)
+            {
                 this.Capture = false;
+            }
         }
         protected override void OnMouseLeave(EventArgs e)
         {
             if (!IsRuntime)
                 base.OnMouseLeave(e);
             else
-                mEdge = EdgeEnum.None;
+                Edge = EdgeEnum.None;
         }
         protected override void OnMouseHover(EventArgs e)
         {
@@ -443,12 +424,12 @@ namespace Yordi.Controls
             }
             if (e.KeyCode == Keys.Escape)
             {
-                isResizable = false;
+                Resizing = false;
                 if (meDimensionar != null && !meDimensionar.IsDisposed)
-                    meDimensionar.Checked = isResizable;
-                isMovable = false;
+                    meDimensionar.Checked = Resizing;
+                Moving = false;
                 if (meMove != null && !meMove.IsDisposed)
-                    meMove.Checked = isMovable;
+                    meMove.Checked = Moving;
                 SetXYHL();
                 return;
             }
@@ -465,51 +446,51 @@ namespace Yordi.Controls
             }
             if (e.KeyCode == Keys.Left)
             {
-                if (isMovable)
+                if (Moving)
                 {
                     this.Left -= moveStep;
                 }
-                else if (isResizable)
+                else if (Resizing)
                 {
                     this.Width -= moveStep;
                 }
             }
             else if (e.KeyCode == Keys.Right)
             {
-                if (isMovable)
+                if (Moving)
                 {
                     this.Left += moveStep;
                 }
-                else if (isResizable)
+                else if (Resizing)
                 {
                     this.Width += moveStep;
                 }
             }
             else if (e.KeyCode == Keys.Up)
             {
-                if (isMovable)
+                if (Moving)
                 {
                     this.Top -= moveStep;
                 }
-                else if (isResizable)
+                else if (Resizing)
                 {
                     this.Height -= moveStep;
                 }
             }
             else if (e.KeyCode == Keys.Down)
             {
-                if (isMovable)
+                if (Moving)
                 {
                     this.Top += moveStep;
                 }
-                else if (isResizable)
+                else if (Resizing)
                 {
                     this.Height += moveStep;
                 }
             }
 
             // Redesenha o controle após a movimentação ou redimensionamento
-            if (isMovable || isResizable)
+            if (Moving || Resizing)
             {
                 Invalidate();
             }
@@ -526,41 +507,14 @@ namespace Yordi.Controls
             }
             return base.IsInputKey(keyData);
         }
-        protected virtual void Img_MouseUp(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right) return;
-            if (this is IEmUso emUso && !emUso.EmUso) return;
-            if (sender is IControlXYHL my && !my.IsRuntime)
-            {
-                if (my.Alpha != AlphaForDisabled)
-                    my.BorderStyle = BorderStyle.None;
-            }
-            else if (sender is PictureBox pb)
-                pb.BorderStyle = BorderStyle.None;
-            else if (sender is Panel pnl)
-                pnl.BorderStyle = BorderStyle.None;
-        }
 
-        protected virtual void Img_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right) return;
-            if (this is IEmUso emUso && !emUso.EmUso) return;
-            if (sender is IControlXYHL my && !my.IsRuntime)
-            {
-                if (my.Alpha != AlphaForDisabled) my.BorderStyle = BorderStyle.Fixed3D;
-            }
-            else if (sender is PictureBox pb)
-                pb.BorderStyle = BorderStyle.Fixed3D;
-            else if (sender is Panel pnl)
-                pnl.BorderStyle = BorderStyle.Fixed3D;
-        }
-
+        #endregion
 
         protected virtual void RedimensionarControle(MouseEventArgs e)
         {
             Control c = (Control)this;
             c.SuspendLayout();
-            switch (mEdge)
+            switch (Edge)
             {
                 case EdgeEnum.TopLeft:
                     c.SetBounds(c.Left + e.X, c.Top + e.Y, c.Width, c.Height);
@@ -589,58 +543,58 @@ namespace Yordi.Controls
             if (!IsRuntime)
             {
                 Cursor = Cursors.Default;
-                mEdge = EdgeEnum.None;
+                Edge = EdgeEnum.None;
                 return;
             }
-            if (isMovable)
+            if (Moving)
             {
                 Cursor = Cursors.SizeAll;
-                mEdge = EdgeEnum.TopLeft;
+                Edge = EdgeEnum.TopLeft;
                 return;
             }
-            if (isResizable)
+            if (Resizing)
             {
                 //top left corner
                 if (e.X <= (Padding.Horizontal) & e.Y <= (Padding.Vertical))
                 {
                     Cursor = Cursors.SizeAll;
-                    mEdge = EdgeEnum.TopLeft;
+                    Edge = EdgeEnum.TopLeft;
                 }
                 //bottom right corner
                 else if ((e.X >= (Width - (Padding.Horizontal + 1))) & (e.Y >= Height - (Padding.Vertical + 1)))
                 {
                     Cursor = Cursors.SizeNWSE;
-                    mEdge = EdgeEnum.BottomRight;
+                    Edge = EdgeEnum.BottomRight;
                 }
                 //left edge
                 else if (e.X <= Padding.Horizontal)
                 {
                     Cursor = Cursors.VSplit;
-                    mEdge = EdgeEnum.Left;
+                    Edge = EdgeEnum.Left;
                 }
                 //right edge
                 else if (e.X > (Width - (Padding.Horizontal + 1)))
                 {
                     Cursor = Cursors.VSplit;
-                    mEdge = EdgeEnum.Right;
+                    Edge = EdgeEnum.Right;
                 }
                 //top edge
                 else if (e.Y <= Padding.Vertical)
                 {
                     Cursor = Cursors.HSplit;
-                    mEdge = EdgeEnum.Top;
+                    Edge = EdgeEnum.Top;
                 }
                 //bottom edge
                 else if (e.Y > Height - (Padding.Vertical + 1))
                 {
                     Cursor = Cursors.HSplit;
-                    mEdge = EdgeEnum.Bottom;
+                    Edge = EdgeEnum.Bottom;
                 }
                 //no edge
                 else
                 {
                     Cursor = Cursors.Default;
-                    mEdge = EdgeEnum.None;
+                    Edge = EdgeEnum.None;
                 }
             }
         }
@@ -659,7 +613,7 @@ namespace Yordi.Controls
             var p = SaveXYHL(this);
             if (p != null)
             {
-                mEdge = EdgeEnum.None;
+                Edge = EdgeEnum.None;
                 XYHLChanged?.Invoke(p);
             }
         }
@@ -736,7 +690,7 @@ namespace Yordi.Controls
             }
             return p;
         }
-       private static XYHL XYHLNew(Control c)
+        private static XYHL XYHLNew(Control c)
         {
             return new XYHL()
             {
@@ -807,5 +761,7 @@ namespace Yordi.Controls
         #endregion
 
         #endregion
+
+
     }
 }

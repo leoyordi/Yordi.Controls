@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Drawing;
 using System.Text.Json.Serialization;
 
 namespace Yordi.Controls
@@ -60,7 +59,7 @@ namespace Yordi.Controls
 
         public override string ToString()
         {
-            return Conversores.ToJson(this);
+            return $"{Form}.{Nome}: {X}, {Y}, {H}, {L}";
         }
         public bool Equals(XYHL? other)
         {

@@ -1,18 +1,17 @@
 ﻿namespace Yordi.Controls
 {
     /// <summary>
-    /// Classe para definir aparência de um tooltip personalizado
+    /// Classe para definir aparência dos menus de contexto personalizados
     /// </summary>
-    public class CurrentTooltipTheme
+    public class CurrentContextMenuTheme
     {
         private static Font _font = SystemFonts.DefaultFont;
         private static Color _foreColor = SystemColors.ControlText;
         private static Color _backColor = SystemColors.Control;
         private static Color _borderColor = SystemColors.ActiveBorder;
-        private static Color _arrowColor = SystemColors.HotTrack;
         private static int _borderWidth = 0;
 
-        public static event Action? TooltipThemeChanged;
+        public static event Action? ContextMenuThemeChanged;
 
         public static Font Font
         {
@@ -23,7 +22,7 @@
                 if (_font != value)
                 {
                     _font = value;
-                    OnTooltipThemeChanged();
+                    OnThemeChanged();
                 }
             }
         }
@@ -36,7 +35,7 @@
                 if (_foreColor != value)
                 {
                     _foreColor = value;
-                    OnTooltipThemeChanged();
+                    OnThemeChanged();
                 }
             }
         }
@@ -49,7 +48,7 @@
                 if (_backColor != value)
                 {
                     _backColor = value;
-                    OnTooltipThemeChanged();
+                    OnThemeChanged();
                 }
             }
         }
@@ -62,22 +61,11 @@
                 if (_borderColor != value)
                 {
                     _borderColor = value;
-                    OnTooltipThemeChanged();
+                    OnThemeChanged();
                 }
             }
         }
-        public static Color ArrowColor
-        {
-            get => _arrowColor;
-            set
-            {
-                if (_arrowColor != value)
-                {
-                    _arrowColor = value;
-                    OnTooltipThemeChanged();
-                }
-            }
-        }
+
         public static int BorderWidth
         {
             get => _borderWidth;
@@ -87,7 +75,7 @@
                 if (_borderWidth != value)
                 {
                     _borderWidth = value;
-                    OnTooltipThemeChanged();
+                    OnThemeChanged();
                 }
             }
         }
@@ -100,13 +88,12 @@
             if (theme.BackColor != null) _backColor = theme.BackColor.Value;
             if (theme.BorderColor != null) _borderColor = theme.BorderColor.Value;
             if (theme.BorderWidth >= 0) _borderWidth = theme.BorderWidth;
-            if (theme.ArrowColor != null) _arrowColor = theme.ArrowColor.Value;
-            OnTooltipThemeChanged();
+            OnThemeChanged();
         }
 
-        private static void OnTooltipThemeChanged()
+        private static void OnThemeChanged()
         {
-            TooltipThemeChanged?.Invoke();
+            ContextMenuThemeChanged?.Invoke();
         }
     }
 }

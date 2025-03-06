@@ -7,6 +7,9 @@ namespace Yordi.Controls
     /// </summary>
     public class LineControl : ControlXYHL
     {
+        /// <summary>
+        /// Enumeração para definir a orientação da linha
+        /// </summary>
         public enum LineOrientation
         {
             Horizontal,
@@ -17,12 +20,16 @@ namespace Yordi.Controls
         private Color lineColor;
         private int lineThickness;
         private int lineBlink;
-        private int animationOffset;
+        private int animationOffset = 0;
         private int animationInterval = 400;
         private bool animate = false;
         private System.Windows.Forms.Timer animationTimer;
 
         #region Construtores
+        /// <summary>
+        /// Construtor que define a orientação da linha
+        /// </summary>
+        /// <param name="orientation">Orientação da linha</param>
         public LineControl(LineOrientation orientation)
         {
             this.orientation = orientation;
@@ -38,6 +45,10 @@ namespace Yordi.Controls
             animationTimer.Interval = animationInterval;
             animationTimer.Tick += AnimationTimer_Tick;
         }
+
+        /// <summary>
+        /// Construtor padrão que define a linha como horizontal
+        /// </summary>
         public LineControl() : this(LineOrientation.Horizontal) { }
         private void InitializeComponent()
         {
@@ -48,12 +59,18 @@ namespace Yordi.Controls
 
         #endregion
 
+        /// <summary>
+        /// Obtém ou define a cor da linha
+        /// </summary>
         public Color LineColor
         {
             get { return lineColor; }
             set { lineColor = value; Invalidate(); }
         }
 
+        /// <summary>
+        /// Obtém ou define a espessura da linha
+        /// </summary>
         public int LineThickness
         {
             get { return lineThickness; }
@@ -65,12 +82,23 @@ namespace Yordi.Controls
             }
         }
 
+        /// <summary>
+        /// Obtém ou define a orientação da linha
+        /// </summary>
         public LineOrientation Orientation
         {
             get { return orientation; }
             set { orientation = value; Invalidate(); }
         }
+
+        /// <summary>
+        /// Obtém ou define o intervalo de animação
+        /// </summary>
         public int AnimationInterval { get => animationInterval; set => animationInterval = value; }
+
+        /// <summary>
+        /// Obtém ou define se a linha deve ser animada
+        /// </summary>
         public bool Animate
         {
             get => animate;
@@ -86,6 +114,11 @@ namespace Yordi.Controls
         }
 
         int line;
+
+        /// <summary>
+        /// Método de pintura do controle
+        /// </summary>
+        /// <param name="e">Argumentos do evento de pintura</param>
         protected override void OnPaint(PaintEventArgs e)
         {
             Graphics graphics = e.Graphics;
@@ -111,6 +144,11 @@ namespace Yordi.Controls
             using (Pen pen = new Pen(lineColor, line))
                 e.Graphics.DrawLine(pen, x, y, w, h);
         }
+
+        /// <summary>
+        /// Desenha o fundo do controle
+        /// </summary>
+        /// <param name="graphics">Objeto Graphics para desenhar</param>
         private void DrawBackground(Graphics graphics)
         {
             if (Parent != null)
@@ -129,6 +167,12 @@ namespace Yordi.Controls
                 }
             }
         }
+
+        /// <summary>
+        /// Desenha um gradiente em movimento
+        /// </summary>
+        /// <param name="graphics">Objeto Graphics para desenhar</param>
+        /// <param name="rect">Retângulo onde o gradiente será desenhado</param>
         private void DrawMovingGradient(Graphics graphics, Rectangle rect)
         {
             var linearOriention = orientation == LineOrientation.Horizontal ? LinearGradientMode.Horizontal : LinearGradientMode.Vertical;
@@ -138,6 +182,12 @@ namespace Yordi.Controls
                 graphics.FillRectangle(brush, rect);
             }
         }
+
+        /// <summary>
+        /// Desenha um círculo em movimento
+        /// </summary>
+        /// <param name="graphics">Objeto Graphics para desenhar</param>
+        /// <param name="rect">Retângulo onde o círculo será desenhado</param>
         private void DrawMovingCircle(Graphics graphics, Rectangle rect)
         {
             int circleDiameter = lineThickness * 2; // Diâmetro do círculo
@@ -150,6 +200,11 @@ namespace Yordi.Controls
                 graphics.FillEllipse(new SolidBrush(lineColor), rect.X, animationOffset, circleDiameter, circleDiameter);
             }
         }
+
+        /// <summary>
+        /// Evento de pressionamento de tecla
+        /// </summary>
+        /// <param name="e">Argumentos do evento de tecla</param>
         protected override void OnKeyDown(KeyEventArgs e)
         {
             if (!IsRuntime)
@@ -159,12 +214,12 @@ namespace Yordi.Controls
             }
             if (e.KeyCode == Keys.Escape)
             {
-                isResizable = false;
+                Resizing = false;
                 if (meDimensionar != null && !meDimensionar.IsDisposed)
-                    meDimensionar.Checked = isResizable;
-                isMovable = false;
+                    meDimensionar.Checked = Resizing;
+                Moving = false;
                 if (meMove != null && !meMove.IsDisposed)
-                    meMove.Checked = isMovable;
+                    meMove.Checked = Moving;
                 SetXYHL();
                 return;
             }
@@ -177,38 +232,41 @@ namespace Yordi.Controls
 
             if (e.KeyCode == Keys.Left)
             {
-                if (isMovable)
+                if (Moving)
                     this.Left -= moveStep;
-                else if (isResizable && orientation == LineOrientation.Horizontal)
+                else if (Resizing && orientation == LineOrientation.Horizontal)
                     this.Width -= moveStep;
             }
             else if (e.KeyCode == Keys.Right)
             {
-                if (isMovable)
+                if (Moving)
                     this.Left += moveStep;
-                else if (isResizable && orientation == LineOrientation.Horizontal)
+                else if (Resizing && orientation == LineOrientation.Horizontal)
                     this.Width += moveStep;
             }
             else if (e.KeyCode == Keys.Up)
             {
-                if (isMovable)
+                if (Moving)
                     this.Top -= moveStep;
-                else if (isResizable && orientation == LineOrientation.Vertical)
+                else if (Resizing && orientation == LineOrientation.Vertical)
                     this.Height -= moveStep;
             }
             else if (e.KeyCode == Keys.Down)
             {
-                if (isMovable)
+                if (Moving)
                     this.Top += moveStep;
-                else if (isResizable && orientation == LineOrientation.Vertical)
+                else if (Resizing && orientation == LineOrientation.Vertical)
                     this.Height += moveStep;
             }
 
             // Redesenha o controle após a movimentação ou redimensionamento
-            if (isMovable || isResizable)
+            if (Moving || Resizing)
                 Invalidate();
         }
 
+        /// <summary>
+        /// Define a posição e tamanho do controle
+        /// </summary>
         public override void SetXYHL()
         {
             var position = FindXYHL();
@@ -220,36 +278,44 @@ namespace Yordi.Controls
             Invalidate();
         }
 
+        /// <summary>
+        /// Redimensiona o controle com base no evento do mouse
+        /// </summary>
+        /// <param name="e">Argumentos do evento do mouse</param>
         protected override void RedimensionarControle(MouseEventArgs e)
         {
-            if (isResizable)
+            if (Resizing)
             {
                 if (orientation == LineOrientation.Horizontal)
                     this.Width = e.X;
                 else
                     this.Height = e.Y;
             }
-            else if (isMovable)
+            else if (Moving)
             {
                 this.Left += e.X - mouseDownLocation.X;
                 this.Top += e.Y - mouseDownLocation.Y;
             }
-            if (isResizable || isMovable)
+            if (Resizing || Moving)
                 Invalidate();
         }
 
+        /// <summary>
+        /// Define o cursor do controle com base no evento do mouse
+        /// </summary>
+        /// <param name="e">Argumentos do evento do mouse</param>
         protected override void DefinirCursor(MouseEventArgs e)
         {
             if (!IsRuntime)
             {
                 Cursor = Cursors.Default;
-                mEdge = EdgeEnum.None;
+                Edge = EdgeEnum.None;
                 return;
             }
-            if (isMovable)
+            if (Moving)
             {
                 Cursor = Cursors.SizeAll;
-                mEdge = EdgeEnum.TopLeft;
+                Edge = EdgeEnum.TopLeft;
                 return;
             }
             if (orientation == LineOrientation.Horizontal)
@@ -258,13 +324,13 @@ namespace Yordi.Controls
                 if (e.X <= Padding.Horizontal)
                 {
                     Cursor = Cursors.SizeWE;
-                    mEdge = EdgeEnum.Left;
+                    Edge = EdgeEnum.Left;
                 }
                 //right corner
                 else if (e.X >= (Width - (Padding.Horizontal + 1)))
                 {
                     Cursor = Cursors.SizeWE;
-                    mEdge = EdgeEnum.Right;
+                    Edge = EdgeEnum.Right;
                 }
             }
             else if (orientation == LineOrientation.Vertical)
@@ -273,24 +339,30 @@ namespace Yordi.Controls
                 if (e.Y <= Padding.Vertical)
                 {
                     Cursor = Cursors.SizeNS;
-                    mEdge = EdgeEnum.Top;
+                    Edge = EdgeEnum.Top;
                 }
                 //bottom corner
                 else if (e.Y >= (Height - (Padding.Vertical + 1)))
                 {
                     Cursor = Cursors.SizeNS;
-                    mEdge = EdgeEnum.Bottom;
+                    Edge = EdgeEnum.Bottom;
                 }
             }
             //no edge
             else
             {
                 Cursor = Cursors.Default;
-                mEdge = EdgeEnum.None;
+                Edge = EdgeEnum.None;
             }
         }
 
         bool blink = false;
+
+        /// <summary>
+        /// Evento de tick do temporizador de animação
+        /// </summary>
+        /// <param name="sender">Objeto que disparou o evento</param>
+        /// <param name="e">Argumentos do evento</param>
         private void AnimationTimer_Tick(object? sender, EventArgs e)
         {
             blink = !blink;

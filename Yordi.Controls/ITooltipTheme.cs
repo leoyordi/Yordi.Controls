@@ -7,5 +7,6 @@
         Color? BackColor { get; set; }
         Color? BorderColor { get; set; }
         int BorderWidth { get; set; }
+        Color? ArrowColor { get; set; }
     }
 }
