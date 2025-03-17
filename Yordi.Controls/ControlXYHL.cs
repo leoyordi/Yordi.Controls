@@ -10,16 +10,11 @@ namespace Yordi.Controls
     /// </summary>
     public class ControlXYHL : Control, IControlXYHL
     {
-        public event XYHLDelegate? XYHLChanged;
-        public event MyMessage? MessageEvent;
-        public event EventHandler? Load;
 
         protected Point mouseDownLocation;
         public IContainer? components { get; set; } = null;
         private bool _enableDrag;
         private bool _enableMove;
-        private int opacity  = 100;
-        private Rectangle areaPath;
         private Pen borderPen = new Pen(ControlPaint.Light(Color.Transparent, 0.0f), 0);
         private SolidBrush _backgroundBrush = new SolidBrush(Color.Transparent);
 
@@ -27,7 +22,6 @@ namespace Yordi.Controls
         public ControlXYHL()
         {
             InitializeComponent();
-            VisibleChanged += Control_VisibleChanged;
         }
 
         private void InitializeComponent()
@@ -39,7 +33,7 @@ namespace Yordi.Controls
             SetStyle(ControlStyles.AllPaintingInWmPaint, true);
             SetStyle(ControlStyles.OptimizedDoubleBuffer, true);
             this.ContextMenuVerifyEx();
-            SetXYHL();
+            this.SetLocation();
         }
 
         #endregion
@@ -68,12 +62,12 @@ namespace Yordi.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool Moving {get; protected set;}
+        public bool Moving {get; set;}
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool Resizing { get; protected set; }
+        public bool Resizing { get; set; }
 
         [Category("Customs")]
         public virtual bool HabilitaDimensionar
@@ -134,7 +128,7 @@ namespace Yordi.Controls
         public virtual int BorderRadius
         {
             get => borderRadius;
-            set { borderRadius = value; RectanglePath(); Invalidate(); }
+            set { borderRadius = value; this.CalculateAreaPath(); Invalidate(); }
         }
         private int borderRadius = 0;
 
@@ -152,7 +146,7 @@ namespace Yordi.Controls
             set
             {
                 borderWidth = value;
-                RectanglePath();
+                this.CalculateAreaPath();
                 Invalidate();
             }
         }
@@ -172,6 +166,7 @@ namespace Yordi.Controls
                 if (Parent != null) Parent.Invalidate(Bounds, true);
             }
         }
+        private int opacity = 100;
 
 
         public new Padding Padding
@@ -213,6 +208,12 @@ namespace Yordi.Controls
         [EditorBrowsable(EditorBrowsableState.Never)]
         [Browsable(false)]
         public bool HasClickSubscribers => _subsClick > 0 || _subsMouseClick > 0;
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        public Rectangle AreaPath { get => areaPath; set => areaPath = value; }
+        private Rectangle areaPath;
         #endregion
 
 
@@ -222,28 +223,17 @@ namespace Yordi.Controls
                 MessageEvent?.Invoke(msg, $"{Name}.{origem}", line);
         }
 
-        private void RectanglePath()
-        {
-            if (borderRadius > 0 || borderWidth > 0)
-            {
-                int x = borderWidth, y = borderWidth, l = Width - (borderWidth * 2), h = Height - (borderWidth * 2);
-                if (areaPath.X != x || areaPath.Y != y || areaPath.Width != l || areaPath.Height != h)
-                    areaPath = new Rectangle(x, y, l, h);
-            }
-            else
-                areaPath = ClientRectangle;
-        }
         protected void DrawPath(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             base.OnPaint(e);
-            RectanglePath();
+            this.CalculateAreaPath();
             e.Graphics.DrawRoundedRectangle(borderPen, areaPath, borderRadius, borderEdges);
         }
         protected void FillPath(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            RectanglePath();
+            this.CalculateAreaPath();
             e.Graphics.FillRoundedRectangle(_backgroundBrush, areaPath, borderRadius, borderEdges);
         }
 
@@ -252,16 +242,16 @@ namespace Yordi.Controls
             Invalidate();
         }
 
-        private void PaddingMinimo(Padding padding)
+        protected virtual void PaddingMinimo(Padding padding)
         {
             var top = padding.Top;
             var bottom = padding.Bottom;
             var left = padding.Left;
             var right = padding.Right;
-            if (top < 3) top = 3;
-            if (bottom < 3) bottom = 3;
-            if (left < 3) left = 3;
-            if (right < 3) right = 3;
+            if (top < 1) top = 1;
+            if (bottom < 1) bottom = 1;
+            if (left < 1) left = 1;
+            if (right < 1) right = 1;
             if (top != base.Padding.Top || bottom != base.Padding.Bottom || left != base.Padding.Left || right != base.Padding.Right)
             {
                 if (base.InvokeRequired)
@@ -303,61 +293,32 @@ namespace Yordi.Controls
             }
         }
 
+        public event XYHLDelegate? XYHLChanged;
+        public event MyMessage? MessageEvent;
 
-        private void Control_VisibleChanged(object? sender, EventArgs e)
-        {
-            SetXYHL();
-        }
 
         public void MenuMoveClick(object? sender, EventArgs e)
         {
-            Moving = !Moving;
-            if (meMove != null && !meMove.IsDisposed)
-                meMove.Checked = Moving;
-            if (!Moving) // se terminou de ajustar
-            {
-                SaveXYHL();
-                TabStop = false;
-            }
-            else
-            {
-                TabStop = true;
-                Focus();
-            }
-            Resizing = false;
-            if (meDimensionar != null && !meDimensionar.IsDisposed)
-                meDimensionar.Checked = Resizing;
-            Invalidate();
+            this.MenuMoveClick();
         }
         public void MenuDimensionarClick(object? sender, EventArgs e)
         {
-            Resizing = !Resizing;
-            if (meDimensionar != null && !meDimensionar.IsDisposed)
-                meDimensionar.Checked = Resizing;
-            if (!Resizing) // se terminou de ajustar
-            {
-                SaveXYHL();
-                TabStop = false;
-            }
-            else
-            {
-                TabStop = true;
-                Focus();
-            }
-            Moving = false;
-            if (meMove != null && !meMove.IsDisposed)
-                meMove.Checked = Moving;
-            Invalidate();
+            this.MenuDimensionarClick();
         }
 
-        protected override void OnHandleCreated(EventArgs e)
+        protected override void OnVisibleChanged(EventArgs e)
         {
-            base.OnHandleCreated(e);
-            Load?.Invoke(this, EventArgs.Empty);
+            base.OnVisibleChanged(e);
+            this.SetLocation();
         }
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
+            BordaTracejada(e);
+        }
+
+        private void BordaTracejada(PaintEventArgs e)
+        {
             if (IsRuntime)
             {
                 using (Pen dashedPen = new Pen(CurrentTheme.DraggingBorderColor, 2.0F))
@@ -367,20 +328,18 @@ namespace Yordi.Controls
                 }
             }
         }
+
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (!IsRuntime)
+            if (!IsRuntime && e.Button == MouseButtons.Left)
             {
                 base.OnMouseDown(e);
                 this.OnMouseDownEx(e);
             }
-            else
+            else if (e.Button == MouseButtons.Left)
             {
-                if (e.Button == MouseButtons.Left)
-                {
-                    this.Capture = true;
-                    mouseDownLocation = e.Location;
-                }
+                this.Capture = true;
+                mouseDownLocation = e.Location;
             }
         }
         protected override void OnMouseMove(MouseEventArgs e)
@@ -393,7 +352,7 @@ namespace Yordi.Controls
         }
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (!IsRuntime)
+            if (!IsRuntime && e.Button == MouseButtons.Left)
             {
                 base.OnMouseUp(e);
                 this.OnMouseUpEx(e);
@@ -430,7 +389,7 @@ namespace Yordi.Controls
                 Moving = false;
                 if (meMove != null && !meMove.IsDisposed)
                     meMove.Checked = Moving;
-                SetXYHL();
+                this.SetLocation();
                 return;
             }
 
@@ -512,251 +471,25 @@ namespace Yordi.Controls
 
         protected virtual void RedimensionarControle(MouseEventArgs e)
         {
-            Control c = (Control)this;
-            c.SuspendLayout();
-            switch (Edge)
-            {
-                case EdgeEnum.TopLeft:
-                    c.SetBounds(c.Left + e.X, c.Top + e.Y, c.Width, c.Height);
-                    break;
-                case EdgeEnum.Left:
-                    c.SetBounds(c.Left + e.X, c.Top, c.Width - e.X, c.Height);
-                    break;
-                case EdgeEnum.Right:
-                    c.SetBounds(c.Left, c.Top, c.Width - (c.Width - e.X), c.Height);
-                    break;
-                case EdgeEnum.Top:
-                    c.SetBounds(c.Left, c.Top + e.Y, c.Width, c.Height - e.Y);
-                    break;
-                case EdgeEnum.Bottom:
-                    c.SetBounds(c.Left, c.Top, c.Width, c.Height - (c.Height - e.Y));
-                    break;
-                case EdgeEnum.BottomRight:
-                    c.SetBounds(c.Left, c.Top, c.Width - (c.Width - e.X), c.Height - (c.Height - e.Y));
-                    break;
-            }
-            c.ResumeLayout();
+            SuspendLayout();
+            this.RedimensionarControleEx(e);
+            ResumeLayout();
         }
-
         protected virtual void DefinirCursor(MouseEventArgs e)
         {
-            if (!IsRuntime)
-            {
-                Cursor = Cursors.Default;
-                Edge = EdgeEnum.None;
-                return;
-            }
-            if (Moving)
-            {
-                Cursor = Cursors.SizeAll;
-                Edge = EdgeEnum.TopLeft;
-                return;
-            }
-            if (Resizing)
-            {
-                //top left corner
-                if (e.X <= (Padding.Horizontal) & e.Y <= (Padding.Vertical))
-                {
-                    Cursor = Cursors.SizeAll;
-                    Edge = EdgeEnum.TopLeft;
-                }
-                //bottom right corner
-                else if ((e.X >= (Width - (Padding.Horizontal + 1))) & (e.Y >= Height - (Padding.Vertical + 1)))
-                {
-                    Cursor = Cursors.SizeNWSE;
-                    Edge = EdgeEnum.BottomRight;
-                }
-                //left edge
-                else if (e.X <= Padding.Horizontal)
-                {
-                    Cursor = Cursors.VSplit;
-                    Edge = EdgeEnum.Left;
-                }
-                //right edge
-                else if (e.X > (Width - (Padding.Horizontal + 1)))
-                {
-                    Cursor = Cursors.VSplit;
-                    Edge = EdgeEnum.Right;
-                }
-                //top edge
-                else if (e.Y <= Padding.Vertical)
-                {
-                    Cursor = Cursors.HSplit;
-                    Edge = EdgeEnum.Top;
-                }
-                //bottom edge
-                else if (e.Y > Height - (Padding.Vertical + 1))
-                {
-                    Cursor = Cursors.HSplit;
-                    Edge = EdgeEnum.Bottom;
-                }
-                //no edge
-                else
-                {
-                    Cursor = Cursors.Default;
-                    Edge = EdgeEnum.None;
-                }
-            }
+            this.DefinirCursorEx(e);
         }
+
 
 
 
         #region Localização
-        public virtual void SetXYHL()
+        public void XYHLChangedInvoke(XYHL p)
         {
-            var position = FindXYHL();
-            SetLocationTask(position);
-            Invalidate();
+            XYHLChanged?.Invoke(p);
         }
-        public void SaveXYHL()
-        {
-            var p = SaveXYHL(this);
-            if (p != null)
-            {
-                Edge = EdgeEnum.None;
-                XYHLChanged?.Invoke(p);
-            }
-        }
-        protected XYHL FindXYHL()
-        {
-            return FindXYHL(this);
-        }
-        protected void SetLocationTask(XYHL p)
-        {
-            if (InvokeRequired)
-                Invoke(() => SetLocation(p));
-            else
-                SetLocation(p);
-        }
-        private void SetLocation(XYHL p)
-        {
-            if (p.X < 0) p.X = 0;
-            if (p.Y < 0) p.Y = 0;
-            if (Parent != null)
-            {
-                if (this.Parent is not Form frm || frm.WindowState == FormWindowState.Maximized)
-                {
-                    if (Parent.Height < p.Y + p.H + Padding.Vertical)
-                        p.Y = (int)((Parent.Height) * 0.88m);
-                    if (Parent.Width < p.X + p.L + Padding.Horizontal)
-                        p.X = (int)(Parent.Width * 0.88m);
-                }
-            }
-            bool invalidate = false;
-            if (HabilitaDimensionar)
-            {
-                if (Size.Height != p.H || Size.Width != p.L)
-                {
-                    Size = p.Size;
-                    invalidate = true;
-                }
-            }
-            if (Location.X != p.X || Location.Y != p.Y)
-            {
-                Location = p.Location;
-                invalidate = true;
-            }
-            if (invalidate) Invalidate();
-        }
-
 
         #region Métodos estáticos
-        public static XYHL FindXYHL(Control c)
-        {
-            var repo = XYHLRepository.Instancia();
-            if (repo == null) return XYHLNew(c);
-
-            Control? pai = c.Parent ?? c.FindForm();
-            string? parentName = ParentName(c);
-            bool alteraPosicao = pai is not Form frm || frm.WindowState == FormWindowState.Maximized;
-            XYHL? p = repo.XYHL(c.Name, parentName);
-            if (p != null)
-            {
-                if (pai != null && alteraPosicao)
-                {
-                    if (p.L > pai.Width)
-                        p.L = pai.Width;
-                    if (p.H > pai.Height)
-                        p.H = pai.Height;
-                    if (pai.Width < (p.X + p.L))
-                        p.X = pai.Width - p.L;
-                    if (pai.Height < (p.Y + p.H))
-                        p.Y = pai.Height - p.H;
-                }
-            }
-            else
-            {
-                p = XYHLNew(c);
-            }
-            return p;
-        }
-        private static XYHL XYHLNew(Control c)
-        {
-            return new XYHL()
-            {
-                H = c.Size.Height,
-                X = c.Location.X,
-                L = c.Size.Width,
-                Y = c.Location.Y,
-                ParentControl = ParentName(c),
-                Nome = c.Name
-            };
-        }
-        public static XYHL? SaveXYHL(Control c)
-        {
-            var repo = XYHLRepository.Instancia;
-            if (repo == null) return null;
-            if (c.Height <= c.Padding.Vertical)
-                c.Height = c.Padding.Vertical;
-            if (c.Width <= c.Padding.Horizontal)
-                c.Width = c.Padding.Horizontal;
-            int x = c.Location.X, y = c.Location.Y;
-            if (x < 0) x = 1;
-            if (y < 0) y = 1;
-            if (c.Location.X != x || c.Location.Y != y)
-                c.Location = new Point(x, y);
-            c.Invalidate();
-            string? name = ParentName(c);
-            XYHL p = new XYHL
-            {
-                H = c.Height,
-                L = c.Width,
-                Nome = c.Name,
-                X = c.Location.X,
-                Y = c.Location.Y,
-                Form = name
-            };
-            Task.Run(() => WritePositionSize(p));
-            return p;
-        }
-        private static string? ParentName(Control c)
-        {
-            if (c.Parent != null)
-                return c.Parent.Name;
-            var parent = c.FindForm();
-            if (parent != null)
-                return parent.Name;
-            return null;
-        }
-        private static bool salvando;
-
-        public static Task WritePositionSize(XYHL positionSize)
-        {
-            var repo = XYHLRepository.Instancia();
-            if (repo == null) return Task.CompletedTask;
-            if (positionSize.X < 0) positionSize.X = 1;
-            if (positionSize.Y < 0) positionSize.Y = 1;
-            if (positionSize.L < 10) positionSize.L = 10;
-            if (positionSize.H < 10) positionSize.H = 10;
-
-            if (!salvando)
-            {
-                salvando = true;
-                _ = repo.Salvar(positionSize);
-                salvando = false;
-            }
-            return Task.CompletedTask;
-        }
 
         #endregion
 

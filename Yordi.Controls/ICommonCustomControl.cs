@@ -16,7 +16,7 @@
     {
         string ControlName { get; }
     }
-    public interface IText : IEnabled
+    public interface IText : IEnabled, ITag
     {
         string Text { get; set; }
         bool ReadOnly { get; set; }
@@ -25,14 +25,18 @@
     {
         int SelectedIndex { get; set; }
     }
-    public interface ICheckBox : IEnabled
+    public interface ICheckBox : IEnabled, ITag
     {
         bool AutoCheck { get; set; }
         bool Checked { get; set; }
-        bool CheckState { get; set; }        
+        CheckState CheckState { get; set; }
     }
     public interface IImage : IEnabled
     {
         Image? Image { get; set; }
+    }
+    public interface ITag
+    {
+        object? Tag { get; set; }
     }
 }

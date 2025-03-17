@@ -8,9 +8,9 @@ namespace Yordi.Controls
         event MyMessage? MessageEvent;
         event XYHLDelegate? XYHLChanged;
         bool HabilitaArrastar { get; set; }
-        bool Moving { get; }
+        bool Moving { get; set; }
         bool HabilitaDimensionar { get; set; }
-        bool Resizing { get; }
+        bool Resizing { get; set; }
         
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -28,11 +28,12 @@ namespace Yordi.Controls
         ToolStripMenuItem? meMove { get; set; }
         IContainer? Components { get; set; }
         bool HasClickSubscribers { get; }
+        int BorderWidth { get; set; }
+        Rectangle AreaPath { get; set; }
 
-        void SaveXYHL();
-        void SetXYHL();
         void MenuDimensionarClick(object? sender, EventArgs e);
         void MenuMoveClick(object? sender, EventArgs e);
+        void XYHLChangedInvoke(XYHL p);
     }
     public interface IUserControlXYHL : IControlXYHL, IEmUso { }
 

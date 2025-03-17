@@ -29,71 +29,99 @@ namespace Yordi.Controls
         }
 
         /// <summary>
-        /// Define o cursor do controle quando estiver arrastando ou dimensionando
+        /// Define o cursor do controle quando estiver arrastando ou dimensionando.
+        /// Para o controle LineControl, usar método específico para tal.
         /// </summary>
-        /// <param name="xyhl">Controle que implementa a interface IControlXYHL</param>
+        /// <param name="control">Controle que implementa a interface IControlXYHL</param>
         /// <param name="e">Argumentos do evento do mouse</param>
-        public static void DefinirCursor(this IControlXYHL xyhl, MouseEventArgs e)
+        public static void DefinirCursorEx<T>(this T control, MouseEventArgs e) where T : Control, IControlXYHL
         {
-            if (xyhl is not Control c) return;
-            if (!xyhl.IsRuntime)
+            if (!control.IsRuntime)
             {
-                c.Cursor = Cursors.Default;
-                xyhl.Edge = EdgeEnum.None;
+                control.Cursor = Cursors.Default;
+                control.Edge = EdgeEnum.None;
                 return;
             }
-            if (xyhl.Moving)
+            if (control.Moving)
             {
-                c.Cursor = Cursors.SizeAll;
-                xyhl.Edge = EdgeEnum.TopLeft;
+                control.Cursor = Cursors.SizeAll;
+                control.Edge = EdgeEnum.TopLeft;
                 return;
             }
-            if (xyhl.Resizing)
+            if (control.Resizing)
             {
                 //top left corner
-                if (e.X <= (c.Padding.Horizontal) & e.Y <= (c.Padding.Vertical))
+                if (e.X <= (control.Padding.Horizontal) & e.Y <= (control.Padding.Vertical))
                 {
-                    c.Cursor = Cursors.SizeAll;
-                    xyhl.Edge = EdgeEnum.TopLeft;
+                    control.Cursor = Cursors.SizeAll;
+                    control.Edge = EdgeEnum.TopLeft;
                 }
                 //bottom right corner
-                else if ((e.X >= (c.Width - (c.Padding.Horizontal + 1))) & (e.Y >= c.Height - (c.Padding.Vertical + 1)))
+                else if ((e.X >= (control.Width - (control.Padding.Horizontal + 1))) & (e.Y >= control.Height - (control.Padding.Vertical + 1)))
                 {
-                    c.Cursor = Cursors.SizeNWSE;
-                    xyhl.Edge = EdgeEnum.BottomRight;
+                    control.Cursor = Cursors.SizeNWSE;
+                    control.Edge = EdgeEnum.BottomRight;
                 }
                 //left edge
-                else if (e.X <= c.Padding.Horizontal)
+                else if (e.X <= control.Padding.Horizontal)
                 {
-                    c.Cursor = Cursors.VSplit;
-                    xyhl.Edge = EdgeEnum.Left;
+                    control.Cursor = Cursors.VSplit;
+                    control.Edge = EdgeEnum.Left;
                 }
                 //right edge
-                else if (e.X > (c.Width - (c.Padding.Horizontal + 1)))
+                else if (e.X > (control.Width - (control.Padding.Horizontal + 1)))
                 {
-                    c.Cursor = Cursors.VSplit;
-                    xyhl.Edge = EdgeEnum.Right;
+                    control.Cursor = Cursors.VSplit;
+                    control.Edge = EdgeEnum.Right;
                 }
                 //top edge
-                else if (e.Y <= c.Padding.Vertical)
+                else if (e.Y <= control.Padding.Vertical)
                 {
-                    c.Cursor = Cursors.HSplit;
-                    xyhl.Edge = EdgeEnum.Top;
+                    control.Cursor = Cursors.HSplit;
+                    control.Edge = EdgeEnum.Top;
                 }
                 //bottom edge
-                else if (e.Y > c.Height - (c.Padding.Vertical + 1))
+                else if (e.Y > control.Height - (control.Padding.Vertical + 1))
                 {
-                    c.Cursor = Cursors.HSplit;
-                    xyhl.Edge = EdgeEnum.Bottom;
+                    control.Cursor = Cursors.HSplit;
+                    control.Edge = EdgeEnum.Bottom;
                 }
                 //no edge
                 else
                 {
-                    c.Cursor = Cursors.Default;
-                    xyhl.Edge = EdgeEnum.None;
+                    control.Cursor = Cursors.Default;
+                    control.Edge = EdgeEnum.None;
                 }
             }
         }
+
+
+        public static void RedimensionarControleEx<T>(this T control, MouseEventArgs e) where T : Control, IControlXYHL
+        {
+            switch (control.Edge)
+            {
+                case EdgeEnum.TopLeft:
+                    control.SetBounds(control.Left + e.X, control.Top + e.Y, control.Width, control.Height);
+                    break;
+                case EdgeEnum.Left:
+                    control.SetBounds(control.Left + e.X, control.Top, control.Width - e.X, control.Height);
+                    break;
+                case EdgeEnum.Right:
+                    control.SetBounds(control.Left, control.Top, control.Width - (control.Width - e.X), control.Height);
+                    break;
+                case EdgeEnum.Top:
+                    control.SetBounds(control.Left, control.Top + e.Y, control.Width, control.Height - e.Y);
+                    break;
+                case EdgeEnum.Bottom:
+                    control.SetBounds(control.Left, control.Top, control.Width, control.Height - (control.Height - e.Y));
+                    break;
+                case EdgeEnum.BottomRight:
+                    control.SetBounds(control.Left, control.Top, control.Width - (control.Width - e.X), control.Height - (control.Height - e.Y));
+                    break;
+            }
+            control.ResumeLayout();
+        }
+
 
         /// <summary>
         /// Verifica e atualiza o menu de contexto do controle para arrasto e dimensionamento, <br/>
@@ -254,5 +282,229 @@ namespace Yordi.Controls
             else if (control is Panel pnl)
                 pnl.BorderStyle = BorderStyle.Fixed3D;
         }
+
+        public static void BordaTracejada<T>(this T control, PaintEventArgs e) where T : Control, IControlXYHL
+        {
+            if (control.IsRuntime)
+            {
+                using (Pen dashedPen = new Pen(CurrentTheme.DraggingBorderColor, 2.0F))
+                {
+                    dashedPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
+                    e.Graphics.DrawRectangle(dashedPen, 0, 0, control.Width - 1, control.Height - 1);
+                }
+            }
+        }
+
+        public static void CalculateAreaPath<T>(this T control) where T : Control, IControlXYHL
+        {
+            if (control.BorderRadius > 0 || control.BorderWidth > 0)
+            {
+                int x = control.BorderWidth, y = control.BorderWidth, l = control.Width - (control.BorderWidth * 2), h = control.Height - (control.BorderWidth * 2);
+                if (control.AreaPath.X != x || control.AreaPath.Y != y || control.AreaPath.Width != l || control.AreaPath.Height != h)
+                    control.AreaPath = new Rectangle(x, y, l, h);
+            }
+            else
+                control.AreaPath = control.ClientRectangle;
+        }
+
+        #region Localização XYHL
+        public static void SetLocation<T>(this T control) where T : Control, IControlXYHL
+        {
+            if (control == null || control.IsDisposed || !control.IsHandleCreated) return;
+            var position = FindXYHL(control);
+            if (control.InvokeRequired)
+                control.Invoke(() => SetLocation_NTS(control, position));
+            else
+                SetLocation_NTS(control, position);
+        }
+        public static void SetLocation<T>(this T control, XYHL position) where T : Control, IControlXYHL
+        {
+            if (control == null || control.IsDisposed || !control.IsHandleCreated) return;
+            if (control.InvokeRequired)
+                control.Invoke(() => SetLocation_NTS(control, position));
+            else
+                SetLocation_NTS(control, position);
+        }
+        private static void SetLocation_NTS<T>(T control, XYHL p) where T : Control, IControlXYHL
+        {
+            if (p.X < 0) p.X = 0;
+            if (p.Y < 0) p.Y = 0;
+            if (control.Parent != null)
+            {
+                if (control.Parent is not Form frm || frm.WindowState == FormWindowState.Maximized)
+                {
+                    if (control.Parent.Height < p.Y + p.H + control.Padding.Vertical)
+                        p.Y = (int)((control.Parent.Height) * 0.88m);
+                    if (control.Parent.Width < p.X + p.L + control.Padding.Horizontal)
+                        p.X = (int)(control.Parent.Width * 0.88m);
+                }
+            }
+            bool invalidate = false;
+            if (control.HabilitaDimensionar)
+            {
+                if (control.Size.Height != p.H || control.Size.Width != p.L)
+                {
+                    control.Size = p.Size;
+                    invalidate = true;
+                }
+            }
+            if (control.Location.X != p.X || control.Location.Y != p.Y)
+            {
+                control.Location = p.Location;
+                invalidate = true;
+            }
+            if (invalidate) control.Invalidate();
+        }
+
+        public static XYHL FindXYHL<T>(this T control) where T : Control, IControlXYHL
+        {
+            var repo = XYHLRepository.Instancia();
+            if (repo == null) return XYHLNew(control);
+
+            Control? pai = control.Parent ?? control.FindForm();
+            string? parentName = ParentName(control);
+            bool alteraPosicao = pai is not Form frm || frm.WindowState == FormWindowState.Maximized;
+            XYHL? p = repo.XYHL(control.Name, parentName);
+            if (p != null)
+            {
+                if (pai != null && alteraPosicao)
+                {
+                    if (p.L > pai.Width)
+                        p.L = pai.Width;
+                    if (p.H > pai.Height)
+                        p.H = pai.Height;
+                    if (pai.Width < (p.X + p.L))
+                        p.X = pai.Width - p.L;
+                    if (pai.Height < (p.Y + p.H))
+                        p.Y = pai.Height - p.H;
+                }
+            }
+            else
+            {
+                p = XYHLNew(control);
+            }
+            return p;
+        }
+        private static XYHL XYHLNew(Control c)
+        {
+            return new XYHL()
+            {
+                H = c.Size.Height,
+                X = c.Location.X,
+                L = c.Size.Width,
+                Y = c.Location.Y,
+                ParentControl = ParentName(c),
+                Nome = c.Name
+            };
+        }
+        public static XYHL? SaveXYHL<T>(this T control) where T : Control, IControlXYHL
+        {
+            var repo = XYHLRepository.Instancia;
+            if (repo == null) return null;
+            if (control.Height <= control.Padding.Vertical)
+                control.Height = control.Padding.Vertical;
+            if (control.Width <= control.Padding.Horizontal)
+                control.Width = control.Padding.Horizontal;
+            int x = control.Location.X, y = control.Location.Y;
+            if (x < 0) x = 1;
+            if (y < 0) y = 1;
+            if (control.Location.X != x || control.Location.Y != y)
+                control.Location = new Point(x, y);
+            control.Invalidate();
+            string? name = ParentName(control);
+            XYHL p = new XYHL
+            {
+                H = control.Height,
+                L = control.Width,
+                Nome = control.Name,
+                X = control.Location.X,
+                Y = control.Location.Y,
+                Form = name
+            };
+            Task.Run(() =>
+            {
+                WritePositionSize(p);
+                if (p != null)
+                {
+                    control.Edge = EdgeEnum.None;
+                    control.XYHLChangedInvoke(p);
+                }
+            });
+            return p;
+        }
+        private static string? ParentName(Control c)
+        {
+            if (c.Parent != null)
+                return c.Parent.Name;
+            var parent = c.FindForm();
+            if (parent != null)
+                return parent.Name;
+            return null;
+        }
+        private static bool salvando;
+
+        private static Task WritePositionSize(XYHL positionSize)
+        {
+            var repo = XYHLRepository.Instancia();
+            if (repo == null) return Task.CompletedTask;
+            if (positionSize.X < 0) positionSize.X = 1;
+            if (positionSize.Y < 0) positionSize.Y = 1;
+            if (positionSize.L < 10) positionSize.L = 10;
+            if (positionSize.H < 10) positionSize.H = 10;
+
+            if (!salvando)
+            {
+                salvando = true;
+                _ = repo.Salvar(positionSize);
+                salvando = false;
+            }
+            return Task.CompletedTask;
+        }
+
+        #endregion
+
+        #region Clicks do menu
+        public static void MenuMoveClick<T>(this T control) where T : Control, IControlXYHL
+        {
+            control.Moving = !control.Moving;
+            if (control.meMove != null && !control.meMove.IsDisposed)
+                control.meMove.Checked = control.Moving;
+            if (!control.Moving) // se terminou de ajustar
+            {
+                control.SaveXYHL();
+                control.TabStop = false;
+            }
+            else
+            {
+                control.TabStop = true;
+                control.Focus();
+            }
+            control.Resizing = false;
+            if (control.meDimensionar != null && !control.meDimensionar.IsDisposed)
+                control.meDimensionar.Checked = control.Resizing;
+            control.Invalidate();
+        }
+        public static void MenuDimensionarClick<T>(this T control) where T : Control, IControlXYHL
+        {
+            control.Resizing = !control.Resizing;
+            if (control.meDimensionar != null && !control.meDimensionar.IsDisposed)
+                control.meDimensionar.Checked = control.Resizing;
+            if (!control.Resizing) // se terminou de ajustar
+            {
+                control.SaveXYHL();
+                control.TabStop = false;
+            }
+            else
+            {
+                control.TabStop = true;
+                control.Focus();
+            }
+            control.Moving = false;
+            if (control.meMove != null && !control.meMove.IsDisposed)
+                control.meMove.Checked = control.Moving;
+            control.Invalidate();
+        }
+
+        #endregion
     }
 }

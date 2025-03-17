@@ -2,6 +2,11 @@ using System.Drawing.Drawing2D;
 
 namespace Yordi.Controls
 {
+    public enum LineOrientation
+    {
+        Horizontal,
+        Vertical
+    }
     /// <summary>
     /// Controle que representa uma linha. Deverá definir como horizontal ou vertical no momento da criação.
     /// </summary>
@@ -10,11 +15,6 @@ namespace Yordi.Controls
         /// <summary>
         /// Enumeração para definir a orientação da linha
         /// </summary>
-        public enum LineOrientation
-        {
-            Horizontal,
-            Vertical
-        }
 
         private LineOrientation orientation;
         private Color lineColor;
@@ -153,10 +153,13 @@ namespace Yordi.Controls
         {
             if (Parent != null)
             {
+                var lines = Parent.Controls.OfType<LineControl>().Where(l => l != this && l.Visible).ToList();
+                if (lines == null || lines.Count == 0)
+                    return;
                 // Desenha os controles que estão no mesmo nível e se intersectam com o controle atual
-                foreach (Control control in Parent.Controls)
+                foreach (Control control in lines)
                 {
-                    if (control != this && control.Visible && control.TabIndex < this.TabIndex && control.Bounds.IntersectsWith(this.Bounds))
+                    if (control != this && control.Visible && control.TabIndex > this.TabIndex && control.Bounds.IntersectsWith(this.Bounds))
                     {
                         using (Bitmap controlBmp = new Bitmap(control.Width, control.Height))
                         {
@@ -267,14 +270,14 @@ namespace Yordi.Controls
         /// <summary>
         /// Define a posição e tamanho do controle
         /// </summary>
-        public override void SetXYHL()
+        public void SetXYHL()
         {
-            var position = FindXYHL();
+            var position = this.FindXYHL();
             if (orientation == LineOrientation.Horizontal)
                 position.H = lineThickness + Padding.Vertical;
             else
                 position.L = lineThickness + Padding.Horizontal;
-            SetLocationTask(position);
+            this.SetLocation(position);
             Invalidate();
         }
 

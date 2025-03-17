@@ -30,11 +30,11 @@ namespace Yordi.Controls
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool Moving { get => isMovable; set { isMovable = value; } }
+        public bool Moving { get => isMovable; set { isMovable = value; MovingChanged?.Invoke(value); } }
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         [EditorBrowsable(EditorBrowsableState.Never)]
-        public bool Resizing { get => isResizable; set { isResizable = value; ResizeChanged?.Invoke(value); } }
+        public bool Resizing { get => isResizable; set { isResizable = value; ResizingChanged?.Invoke(value); } }
 
         [Browsable(false)]
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
@@ -57,14 +57,18 @@ namespace Yordi.Controls
         public event XYHLDelegate? XYHLChanged;
 
         /// <summary>
+        /// Evento disparado quando o controle está sendo movido
+        /// </summary>
+        public event BoolChanged? MovingChanged;
+        /// <summary>
+        /// Evento disparado quando o controle está sendo redimensionado
+        /// </summary>
+        public event BoolChanged? ResizingChanged;
+
+        /// <summary>
         /// Evento disparado para enviar mensagens
         /// </summary>
         public event MyMessage? MessageEvent;
-
-        /// <summary>
-        /// Evento disparado quando o redimensionamento é alterado
-        /// </summary>
-        public event BoolChanged? ResizeChanged;
 
 
         [Browsable(false)]
@@ -264,6 +268,11 @@ namespace Yordi.Controls
             }
 
         }
+
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Browsable(false)]
+        public Rectangle AreaPath { get => areaPath; set => areaPath = value; }
 
         public UserControlXYHL()
         {
@@ -515,15 +524,7 @@ namespace Yordi.Controls
             //BasePaint(e);
             DrawPath(e);
             FillPath(e);
-            if (IsRuntime)
-            {
-                using (Pen dashedPen = new Pen(CurrentTheme.DraggingBorderColor, 2.0F))
-                {
-                    dashedPen.DashStyle = System.Drawing.Drawing2D.DashStyle.Dash;
-                    e.Graphics.DrawRectangle(dashedPen, 0, 0, Width - 1, Height - 1);
-                }
-            }
-
+            this.BordaTracejada(e);
         }
         protected override void OnMouseDown(MouseEventArgs e)
         {
@@ -696,29 +697,11 @@ namespace Yordi.Controls
 
         public void MenuMoveClick(object? sender, EventArgs e)
         {
-            Moving = !Moving;
-            if (meMove != null && !meMove.IsDisposed)
-                meMove.Checked = Moving;
-            if (!Moving) // se terminou de ajustar
-                SaveXYHL();
-            Resizing = false;
-            if (meDimensionar != null && !meDimensionar.IsDisposed)
-                meDimensionar.Checked = Resizing;
-            //toRefresh = true;
-            Invalidate();
+            this.MenuMoveClick();
         }
         public void MenuDimensionarClick(object? sender, EventArgs e)
         {
-            Resizing = !Resizing;
-            if (meDimensionar != null && !meDimensionar.IsDisposed)
-                meDimensionar.Checked = Resizing;
-            if (!Resizing) // se terminou de ajustar
-                SaveXYHL();
-            Moving = false;
-            if (meMove != null && !meMove.IsDisposed)
-                meMove.Checked = Moving;
-            //toRefresh = true;
-            Invalidate();
+            this.MenuDimensionarClick();
         }
 
         #endregion
@@ -727,57 +710,20 @@ namespace Yordi.Controls
         public virtual void SetXYHL()
         {
             if (!Visible) return;
-            var position = ControlXYHL.FindXYHL(this);
-            SetLocationTask(position);
-            Invalidate();
+            this.SetLocation();
         }
-        public void SaveXYHL()
+        public void SaveMeXYHL()
         {
-            var p = ControlXYHL.SaveXYHL(this);
+            var p = this.SaveXYHL();
             if (p != null)
             {
                 _initialSize = p.Size;
                 _initialLocation = p.Location;
-                Edge = EdgeEnum.None;
-                XYHLChanged?.Invoke(p);
             }
         }
-        protected void SetLocationTask(XYHL p)
+        public void XYHLChangedInvoke(XYHL p)
         {
-            if (InvokeRequired)
-                Invoke(() => SetLocation(p));
-            else
-                SetLocation(p);
-        }
-        private void SetLocation(XYHL p)
-        {
-            if (p.X < 0) p.X = 0;
-            if (p.Y < 0) p.Y = 0;
-            if (Parent != null)
-            {
-                if (this.Parent is not Form frm || frm.WindowState == FormWindowState.Maximized)
-                {
-                    if (Parent.Height < p.Y + p.H + Padding.Vertical)
-                        p.Y = (int)((Parent.Height) * 0.88m);
-                    if (Parent.Width < p.X + p.L + Padding.Horizontal)
-                        p.X = (int)(Parent.Width * 0.88m);
-                }
-            }
-            bool invalidate = false;
-            if (HabilitaDimensionar)
-            {
-                if (Size.Height != p.H || Size.Width != p.L)
-                {
-                    Size = p.Size;
-                    invalidate = true;
-                }
-            }
-            if (Location.X != p.X || Location.Y != p.Y)
-            {
-                Location = p.Location;
-                invalidate = true;
-            }
-            if (invalidate) Invalidate();
+            XYHLChanged?.Invoke(p);
         }
 
         #endregion

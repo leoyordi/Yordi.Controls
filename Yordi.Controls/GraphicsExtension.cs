@@ -42,7 +42,7 @@ namespace Yordi.Controls
         }
 
 
-        private static GraphicsPath GenerateRoundedRectangle(
+        public static GraphicsPath GenerateRoundedRectangle(
 				this Graphics graphics,
 				RectangleF rectangle,
 				float radius,

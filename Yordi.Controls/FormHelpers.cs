@@ -218,9 +218,9 @@ namespace Yordi.Controls
         }
 
     }
-    public static class AtualizaControles
+    public static class AtualizaControlesIndexados
     {
-        public static void AtualizaControlesIndexados(this IObjectStringIndexer obj, Control.ControlCollection controles)
+        public static void AtualizaControles(this IObjectStringIndexer obj, Control.ControlCollection controles)
         {
             foreach (Control control in controles)
             {
@@ -229,7 +229,7 @@ namespace Yordi.Controls
                 AtualizaControle(control, valor);
             }
         }
-        public static void AtualizaControlesIndexados(this IObjectStringIndexer obj, Control[] controles)
+        public static void AtualizaControles(this IObjectStringIndexer obj, Control[] controles)
         {
             foreach (Control control in controles)
             {
