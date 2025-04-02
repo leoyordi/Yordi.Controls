@@ -18,6 +18,11 @@ namespace Yordi.Controls
         /// </summary>
         public YTooltip()
         {
+            CurrentTooltipTheme.TooltipThemeChanged += () => 
+            { 
+                BackColor = CurrentTooltipTheme.BackColor; 
+                ForeColor = CurrentTooltipTheme.ForeColor; 
+            };
             BackColor = CurrentTooltipTheme.BackColor;
             ForeColor = CurrentTooltipTheme.ForeColor;
             OwnerDraw = true;
@@ -93,7 +98,7 @@ namespace Yordi.Controls
                 DrawPointer(e.Graphics);
                 TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.Top;
                 Rectangle textBounds = new Rectangle(paddingH / 2, paddingV / 2, e.Bounds.Width - paddingH, e.Bounds.Height - paddingV);
-                TextRenderer.DrawText(e.Graphics, e.ToolTipText, CurrentTooltipTheme.Font, textBounds, Color.White, flags);
+                TextRenderer.DrawText(e.Graphics, e.ToolTipText, CurrentTooltipTheme.Font, textBounds, CurrentTooltipTheme.ForeColor, flags);
             }
         }
         private void DrawPointer(Graphics g)
@@ -128,7 +133,6 @@ namespace Yordi.Controls
         protected void Tooltip_Popup(object? sender, PopupEventArgs e)
         {
             if (sender is not ToolTip tooltip || e.AssociatedControl == null) return;
-            textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), CurrentTooltipTheme.Font);
             paddingH = 0;
             paddingV = 0;
             if (e.AssociatedControl.Parent != null)
@@ -143,7 +147,10 @@ namespace Yordi.Controls
                     paddingH = arrowSizeX2;
                 if (paddingV < arrowSizeX2)
                     paddingV = arrowSizeX2;
+                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), CurrentTooltipTheme.Font);
             }
+            else
+                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), CurrentTheme.Font);
 
             tooltipSize = new Size(textSize.Width + paddingH, textSize.Height + paddingV);
             e.ToolTipSize = tooltipSize;

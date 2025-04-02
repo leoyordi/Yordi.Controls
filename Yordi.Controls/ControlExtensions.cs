@@ -359,43 +359,31 @@ namespace Yordi.Controls
         public static XYHL FindXYHL<T>(this T control) where T : Control, IControlXYHL
         {
             var repo = XYHLRepository.Instancia();
-            if (repo == null) return XYHLNew(control);
-
-            Control? pai = control.Parent ?? control.FindForm();
-            string? parentName = ParentName(control);
-            bool alteraPosicao = pai is not Form frm || frm.WindowState == FormWindowState.Maximized;
-            XYHL? p = repo.XYHL(control.Name, parentName);
-            if (p != null)
-            {
-                if (pai != null && alteraPosicao)
-                {
-                    if (p.L > pai.Width)
-                        p.L = pai.Width;
-                    if (p.H > pai.Height)
-                        p.H = pai.Height;
-                    if (pai.Width < (p.X + p.L))
-                        p.X = pai.Width - p.L;
-                    if (pai.Height < (p.Y + p.H))
-                        p.Y = pai.Height - p.H;
-                }
-            }
-            else
-            {
-                p = XYHLNew(control);
-            }
+            XYHL? p = repo?.XYHL(control) ?? XYHLNew(control);
             return p;
         }
-        private static XYHL XYHLNew(Control c)
+
+        public static XYHL? FindTrulyXYHL<T>(this T control) where T : Control, IControlXYHL
         {
-            return new XYHL()
+            var repo = XYHLRepository.Instancia();
+            return repo?.XYHL(control);
+        }
+
+        public static XYHL XYHLNew(Control c)
+        {
+            Screen screen = Screen.FromControl(c);
+            var p = new XYHL()
             {
                 H = c.Size.Height,
                 X = c.Location.X,
                 L = c.Size.Width,
                 Y = c.Location.Y,
                 ParentControl = ParentName(c),
-                Nome = c.Name
+                Nome = c.Name,
             };
+            p.CalculateHL(screen);
+            p.CalculateXY(screen);
+            return p;
         }
         public static XYHL? SaveXYHL<T>(this T control) where T : Control, IControlXYHL
         {
@@ -412,6 +400,7 @@ namespace Yordi.Controls
                 control.Location = new Point(x, y);
             control.Invalidate();
             string? name = ParentName(control);
+            Screen reference = Screen.FromControl(control);
             XYHL p = new XYHL
             {
                 H = control.Height,
@@ -419,7 +408,9 @@ namespace Yordi.Controls
                 Nome = control.Name,
                 X = control.Location.X,
                 Y = control.Location.Y,
-                Form = name
+                Form = name,
+                ReferenceHeight = reference.Bounds.Height,
+                ReferenceWidth = reference.Bounds.Width
             };
             Task.Run(() =>
             {

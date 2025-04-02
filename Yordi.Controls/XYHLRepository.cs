@@ -1,4 +1,5 @@
 using Yordi.Tools;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TextBox;
 
 namespace Yordi.Controls
 {
@@ -61,5 +62,50 @@ namespace Yordi.Controls
             var r = finds.Find(m => string.Equals(form, m.Form));
             return r?.Clone();
         }
+
+        public XYHL? XYHL(Control? control)
+        {
+            if (control == null) return null;
+            Control? pai = control.Parent ?? control.FindForm();
+            string? parentName = pai?.Name;
+            XYHL? p;
+            var finds = _lista?.FindAll(m => string.Equals(m.Nome, control.Name));
+            if (finds == null) return null;
+            if (finds.Count == 1)
+                p = finds[0].Clone();
+            else
+            {
+                var r = finds.Find(m => string.Equals(parentName, m.Form));
+                p = r?.Clone();
+            }
+            if (p == null) return null;
+            try
+            {
+                var actualScreen = Screen.FromControl(control);
+                if (actualScreen != null)
+                {
+                    p.CalculateHL(actualScreen);
+                    p.CalculateXY(actualScreen);
+                }
+            }
+            catch { }
+            if (p != null)
+            {
+                bool alteraPosicao = pai is not Form frm || frm.WindowState == FormWindowState.Maximized;
+                if (pai != null && alteraPosicao)
+                {
+                    if (p.L > pai.Width)
+                        p.L = pai.Width;
+                    if (p.H > pai.Height)
+                        p.H = pai.Height;
+                    if (pai.Width < (p.X + p.L))
+                        p.X = pai.Width - p.L;
+                    if (pai.Height < (p.Y + p.H))
+                        p.Y = pai.Height - p.H;
+                }
+            }
+            return p;
+        }
+
     }
 }

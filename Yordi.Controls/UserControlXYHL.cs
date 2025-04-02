@@ -589,8 +589,18 @@ namespace Yordi.Controls
         {
             base.OnHandleCreated(e);
             this.ContextMenuVerifyEx();
-            _initialLocation = Location;
-            _initialSize = Size;
+            var xyhl = this.FindTrulyXYHL();
+            if (xyhl == null)
+            {
+                _initialLocation = Location;
+                _initialSize = Size;
+            }
+            else
+            {
+                this.SetLocation();
+                _initialLocation = Location;
+                _initialSize = Size;
+            }
         }
         protected override void OnKeyDown(KeyEventArgs e)
         {

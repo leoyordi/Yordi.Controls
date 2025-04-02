@@ -35,28 +35,53 @@ namespace Yordi.Controls
         /// <summary>
         /// Posição X do controle
         /// </summary>
-        public decimal X { get; set; }
+        public decimal X { get => x; set => x = value; }
+        private decimal x;
 
         /// <summary>
         /// Posição Y do controle
         /// </summary>
-        public decimal Y { get; set; }
+        public decimal Y { get => y; set => y = value; }
+        private decimal y;
 
         /// <summary>
         /// Altura do controle (Height)
         /// </summary>
-        public decimal H { get; set; }
+        public decimal H { get => h; set => h = value; }
+        private decimal h;
 
         /// <summary>
         /// Largura do controle (Width)
         /// </summary>
-        public decimal L { get; set; }
+        public decimal L { get => l; set => l = value; }
+        private decimal l;
 
+        public int ReferenceWidth { get; set; } = 1920; // Ex: 1920
+        public int ReferenceHeight { get; set; } = 1080; // Ex: 1080
+
+        private decimal widthScale;
+        private decimal heightScale;
         [BDIgnorar, JsonIgnore]
         public Size Size => new Size((int)L, (int)H);
         [BDIgnorar, JsonIgnore]
         public Point Location => new Point((int)X, (int)Y);
 
+        public void CalculateHL(Screen actualScreen)
+        {
+            decimal currentWidth = actualScreen.Bounds.Width;
+            decimal widthScale = currentWidth / ReferenceWidth;
+            l *= widthScale;
+            h *= widthScale;
+        }
+        public void CalculateXY(Screen actualScreen)
+        {
+            decimal currentWidth = actualScreen.Bounds.Width;
+            decimal currentHeight = actualScreen.Bounds.Height;
+            decimal widthScale = currentWidth / ReferenceWidth;
+            decimal heightScale = currentHeight / ReferenceHeight;
+            x *= widthScale;
+            y *= heightScale;
+        }
         public override string ToString()
         {
             return $"{Form}.{Nome}: {X}, {Y}, {H}, {L}";
