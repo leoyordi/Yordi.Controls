@@ -31,4 +31,5 @@
 
 ### Version History
 * 1.0.3 - atualização da biblioteca Yordi.Tools para a versão 1.0.9
-Problema conhecido: Tooltip não aceita BackColor e ForeColor
+** LineControl possui animação: blink, gradient e circle
+** Problema conhecido: Tooltip não aceita BackColor e ForeColor
