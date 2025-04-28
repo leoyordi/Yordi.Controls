@@ -28,3 +28,7 @@
 	* Habilita ou desabilita controles, passando por lista ou ControlCollection (Panel, Form, ...).
 	* Tooltip personalizado, usando o tema passado para CurrentTooltipTheme.
 
+
+### Version History
+* 1.0.3 - atualização da biblioteca Yordi.Tools para a versão 1.0.9
+Problema conhecido: Tooltip não aceita BackColor e ForeColor

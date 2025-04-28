@@ -104,9 +104,22 @@
             OnTooltipThemeChanged();
         }
 
+        public static TooltipTheme Theme()
+        {
+            return new TooltipTheme
+            {
+                Font = _font,
+                ForeColor = _foreColor,
+                BackColor = _backColor,
+                BorderColor = _borderColor,
+                BorderWidth = _borderWidth,
+                ArrowColor = _arrowColor
+            };
+        }
         private static void OnTooltipThemeChanged()
         {
             TooltipThemeChanged?.Invoke();
         }
+
     }
 }

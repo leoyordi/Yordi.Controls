@@ -7,6 +7,13 @@ namespace Yordi.Controls
         Horizontal,
         Vertical
     }
+    public enum AnimationType
+    {
+        None,
+        Blink,
+        Gradient,
+        Circle
+    }
     /// <summary>
     /// Controle que representa uma linha. Deverá definir como horizontal ou vertical no momento da criação.
     /// </summary>
@@ -17,10 +24,12 @@ namespace Yordi.Controls
         /// </summary>
 
         private LineOrientation orientation;
+        private AnimationType animationType = AnimationType.None;
         private Color lineColor;
-        private int lineThickness;
-        private int lineBlink;
+        //private int lineThickness;
+        //private int lineBlink;
         private int animationOffset = 0;
+        private int animationJump = 1;
         private int animationInterval = 400;
         private bool animate = false;
         private System.Windows.Forms.Timer animationTimer;
@@ -40,7 +49,8 @@ namespace Yordi.Controls
                     ControlStyles.ResizeRedraw |
                     ControlStyles.UserPaint, true);
             BackColor = Color.Transparent;
-
+            Resize += (s, e) => Resized();
+            MarginChanged += (s, e) => Resized();
             animationTimer = new System.Windows.Forms.Timer();
             animationTimer.Interval = animationInterval;
             animationTimer.Tick += AnimationTimer_Tick;
@@ -53,8 +63,8 @@ namespace Yordi.Controls
         private void InitializeComponent()
         {
             lineColor = Color.Black;
-            lineThickness = 2;
-            lineBlink = lineThickness * 2;
+            //lineThickness = 2;
+            //lineBlink = lineThickness * 2;
         }
 
         #endregion
@@ -68,18 +78,25 @@ namespace Yordi.Controls
             set { lineColor = value; Invalidate(); }
         }
 
-        /// <summary>
-        /// Obtém ou define a espessura da linha
-        /// </summary>
-        public int LineThickness
+        ///// <summary>
+        ///// Obtém ou define a espessura da linha
+        ///// </summary>
+        //public int LineThickness
+        //{
+        //    get { return lineThickness; }
+        //    set
+        //    {
+        //        lineThickness = value;
+        //        lineBlink = lineThickness * 2;
+        //        Invalidate();
+        //    }
+        //}
+
+
+        public AnimationType AnimationType
         {
-            get { return lineThickness; }
-            set
-            {
-                lineThickness = value;
-                lineBlink = lineThickness * 2;
-                Invalidate();
-            }
+            get { return animationType; }
+            set { animationType = value; Invalidate(); }
         }
 
         /// <summary>
@@ -90,6 +107,7 @@ namespace Yordi.Controls
             get { return orientation; }
             set { orientation = value; Invalidate(); }
         }
+
 
         /// <summary>
         /// Obtém ou define o intervalo de animação
@@ -125,24 +143,49 @@ namespace Yordi.Controls
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
             DrawBackground(graphics);
             base.OnPaint(e);
-            int x, y, h, w;
-            line = blink && animate ? lineBlink : lineThickness;
-            if (orientation == LineOrientation.Horizontal)
-            {
-                x = 0;
-                w = Width;
-                h = Height / 2;
-                y = h;
-            }
+            if (animationType == AnimationType.Gradient)
+                DrawMovingGradient(graphics);
+            else if (animationType == AnimationType.Circle)
+                DrawMovingCircle(graphics);
             else
             {
-                y = 0;
-                w = Width / 2;
-                h = Height;
-                x = w;
+                int x, y, h, w;
+                int lineFull;
+                if (orientation == LineOrientation.Horizontal)
+                {
+                    x = 0;
+                    w = Width;
+                    h = Height / 2;
+                    y = h;
+                    if (Margin.Vertical > 0)
+                        lineFull = Height - Margin.Vertical;
+                    else
+                        lineFull = Height - 2; // sempre 2 pontos afastados do limite
+                }
+                else
+                {
+                    y = 0;
+                    w = Width / 2;
+                    h = Height;
+                    x = w;
+                    if (Margin.Horizontal > 0)
+                        lineFull = Width - Margin.Horizontal;
+                    else
+                        lineFull = Width - 2; // sempre 2 pontos afastados do limite
+
+                }
+                if (lineFull <= 0)
+                    lineFull = 1; // sempre 1 ponto
+                if (blink && animate)
+                    line = lineFull - 2;
+                else
+                    line = lineFull;
+                //line = blink && animate ? lineBlink : lineThickness;
+                if (line < 0)
+                    line = 0; // sempre 0 ponto;
+                using (Pen pen = new Pen(lineColor, line))
+                    e.Graphics.DrawLine(pen, x, y, w, h);
             }
-            using (Pen pen = new Pen(lineColor, line))
-                e.Graphics.DrawLine(pen, x, y, w, h);
         }
 
         /// <summary>
@@ -176,13 +219,14 @@ namespace Yordi.Controls
         /// </summary>
         /// <param name="graphics">Objeto Graphics para desenhar</param>
         /// <param name="rect">Retângulo onde o gradiente será desenhado</param>
-        private void DrawMovingGradient(Graphics graphics, Rectangle rect)
+        private void DrawMovingGradient(Graphics graphics)
         {
             var linearOriention = orientation == LineOrientation.Horizontal ? LinearGradientMode.Horizontal : LinearGradientMode.Vertical;
-            using (LinearGradientBrush brush = new LinearGradientBrush(rect, Color.White, lineColor, linearOriention))
+            Rectangle real = new Rectangle(Margin.Left, Margin.Top, Width - Margin.Horizontal, Height - Margin.Vertical);
+            using (LinearGradientBrush brush = new LinearGradientBrush(ClientRectangle, Color.White, lineColor, linearOriention))
             {
                 brush.TranslateTransform(animationOffset, 0);
-                graphics.FillRectangle(brush, rect);
+                graphics.FillRectangle(brush, real);
             }
         }
 
@@ -191,17 +235,36 @@ namespace Yordi.Controls
         /// </summary>
         /// <param name="graphics">Objeto Graphics para desenhar</param>
         /// <param name="rect">Retângulo onde o círculo será desenhado</param>
-        private void DrawMovingCircle(Graphics graphics, Rectangle rect)
+        private void DrawMovingCircle(Graphics graphics)
         {
-            int circleDiameter = lineThickness * 2; // Diâmetro do círculo
+            int circleDiameter; // = lineThickness * 2; // Diâmetro do círculo
             if (orientation == LineOrientation.Horizontal)
             {
-                graphics.FillEllipse(new SolidBrush(lineColor), animationOffset, rect.Y, circleDiameter, circleDiameter);
+                circleDiameter = Height - Margin.Vertical;
+                if (circleDiameter < 1)
+                    circleDiameter = 1; // Garantir que o diâmetro seja pelo menos 1
+                graphics.FillEllipse(new SolidBrush(lineColor), animationOffset, ClientRectangle.Y + Margin.Top, circleDiameter, circleDiameter);
             }
             else
             {
-                graphics.FillEllipse(new SolidBrush(lineColor), rect.X, animationOffset, circleDiameter, circleDiameter);
+                circleDiameter = Width - Margin.Horizontal;
+                if (circleDiameter < 1)
+                    circleDiameter = 1; // Garantir que o diâmetro seja pelo menos 1
+                graphics.FillEllipse(new SolidBrush(lineColor), ClientRectangle.X + Margin.Left, animationOffset, circleDiameter, circleDiameter);
             }
+        }
+
+
+        private void Resized()
+        {
+            if (orientation == LineOrientation.Horizontal)
+                animationJump = (Width - Margin.Horizontal) / 10;
+            else
+                animationJump = (Height - Margin.Vertical) / 10;
+            if (animationJump < 1)
+                animationJump = 1; // Garantir que o salto seja pelo menos 1
+            animationOffset = animationJump;
+            Invalidate();
         }
 
         /// <summary>
@@ -267,6 +330,8 @@ namespace Yordi.Controls
                 Invalidate();
         }
 
+
+
         /// <summary>
         /// Define a posição e tamanho do controle
         /// </summary>
@@ -274,9 +339,9 @@ namespace Yordi.Controls
         {
             var position = this.FindXYHL();
             if (orientation == LineOrientation.Horizontal)
-                position.H = lineThickness + Padding.Vertical;
+                position.H = Height;// lineThickness + Padding.Vertical;
             else
-                position.L = lineThickness + Padding.Horizontal;
+                position.L = Width; // lineThickness + Padding.Horizontal;
             this.SetLocation(position);
             Invalidate();
         }
@@ -368,7 +433,22 @@ namespace Yordi.Controls
         /// <param name="e">Argumentos do evento</param>
         private void AnimationTimer_Tick(object? sender, EventArgs e)
         {
-            blink = !blink;
+            if (animationType == AnimationType.Blink)
+                blink = !blink;
+            else if (animationType == AnimationType.Gradient || animationType == AnimationType.Circle)
+            {
+                animationOffset += animationJump;
+                if (orientation == LineOrientation.Horizontal)
+                {
+                    if (animationOffset > (Width - Margin.Horizontal))
+                        animationOffset = 0;
+                }
+                else if (orientation == LineOrientation.Vertical)
+                {
+                    if (animationOffset > (Height - Margin.Vertical))
+                        animationOffset = 0;
+                }
+            }
             Invalidate();
         }
     }

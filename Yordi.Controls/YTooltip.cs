@@ -13,24 +13,42 @@ namespace Yordi.Controls
         private Size textSize;
         private int paddingH = 0, paddingV = 0;
         private Point? controlPosition;
+        private Font font = SystemFonts.DefaultFont;
+
+        public Font Font { get => font; set => font = value; }
+
         /// <summary>
         /// Construtor padrão
         /// </summary>
         public YTooltip()
         {
+            BackColor = Color.DarkBlue;// CurrentTooltipTheme.BackColor;
+            ForeColor = Color.White; // CurrentTooltipTheme.ForeColor;
             CurrentTooltipTheme.TooltipThemeChanged += () => 
             { 
                 BackColor = CurrentTooltipTheme.BackColor; 
-                ForeColor = CurrentTooltipTheme.ForeColor; 
+                ForeColor = CurrentTooltipTheme.ForeColor;
+                font = CurrentTooltipTheme.Font;
             };
-            BackColor = CurrentTooltipTheme.BackColor;
-            ForeColor = CurrentTooltipTheme.ForeColor;
             OwnerDraw = true;
             IsBalloon = true;
             Draw += Tooltip_Draw;
             Popup += Tooltip_Popup;
         }
 
+        public YTooltip(TooltipTheme thema)
+        {
+            OwnerDraw = true;
+            IsBalloon = true;
+            if (thema.BackColor != null)
+                BackColor = thema.BackColor.Value;
+            if (thema.ForeColor != null)
+                ForeColor = thema.ForeColor.Value;
+            if (thema.Font != null)
+                font = thema.Font;
+            base.Draw += Tooltip_Draw;
+            base.Popup += Tooltip_Popup;
+        }
         /// <summary>
         /// Define o texto do tooltip para um controle
         /// </summary>
@@ -91,14 +109,14 @@ namespace Yordi.Controls
         {
             if (!IsBalloon)
             {
-                using (Pen pen = new Pen(CurrentTooltipTheme.BackColor))
+                using (Pen pen = new Pen(BackColor))
                     e.Graphics.DrawRoundedRectangle(pen, e.Bounds, radius);
-                using (SolidBrush back = new SolidBrush(CurrentTooltipTheme.BackColor))
+                using (SolidBrush back = new SolidBrush(BackColor))
                     e.Graphics.FillRoundedRectangle(back, e.Bounds, radius);
                 DrawPointer(e.Graphics);
                 TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.Top;
                 Rectangle textBounds = new Rectangle(paddingH / 2, paddingV / 2, e.Bounds.Width - paddingH, e.Bounds.Height - paddingV);
-                TextRenderer.DrawText(e.Graphics, e.ToolTipText, CurrentTooltipTheme.Font, textBounds, CurrentTooltipTheme.ForeColor, flags);
+                TextRenderer.DrawText(e.Graphics, e.ToolTipText, font, textBounds, ForeColor, flags);
             }
         }
         private void DrawPointer(Graphics g)
@@ -147,10 +165,10 @@ namespace Yordi.Controls
                     paddingH = arrowSizeX2;
                 if (paddingV < arrowSizeX2)
                     paddingV = arrowSizeX2;
-                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), CurrentTooltipTheme.Font);
+                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), font);
             }
             else
-                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), CurrentTheme.Font);
+                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), font);
 
             tooltipSize = new Size(textSize.Width + paddingH, textSize.Height + paddingV);
             e.ToolTipSize = tooltipSize;

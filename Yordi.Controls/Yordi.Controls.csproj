@@ -14,7 +14,7 @@
 	  </Description>
 	  <PackageTags>Yordi;Controls;Ferramentas;Windows Forms;WindowsForms; winforms</PackageTags>
 	  <PackageId>Yordi.Controls</PackageId>
-	  <Version>1.0.2</Version>
+	  <Version>1.0.3</Version>
 	  <Company>Yordi Sistemas Inteligentes</Company>
 	  <RepositoryUrl>https://github.com/leoyordi/Yordi.Controls</RepositoryUrl>
 	  <PackageReadmeFile>README.md</PackageReadmeFile>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <PackageReference Include="Yordi.Tools" Version="1.0.5" />
+	  <PackageReference Include="Yordi.Tools" Version="1.0.9" />
   </ItemGroup>
 
   <ItemGroup>
