@@ -228,14 +228,14 @@ namespace Yordi.Controls
             // Desenhar o fundo da barra
             using (Brush backgroundBrush = new SolidBrush(backgroundColor))
             {
-                graphics.FillRectangle(backgroundBrush, ClientRectangle);
+                graphics.FillRoundedRectangle(backgroundBrush, ClientRectangle, BorderRadius);
             }
 
             // Desenhar a barra cheia
             barRect = GetBarRectangle();
             using (Brush barBrush = new SolidBrush(barColor))
             {
-                graphics.FillRectangle(barBrush, barRect.Value);
+                graphics.FillRoundedRectangle(barBrush, barRect.Value, BorderRadius);
             }
 
             // Calcular a posição do progresso
@@ -331,7 +331,7 @@ namespace Yordi.Controls
 
             using (Brush progressBrush = new SolidBrush(colorProgressPoint))
             {
-                graphics.FillRectangle(progressBrush, barProgressRect);
+                graphics.FillRoundedRectangle(progressBrush, barProgressRect, BorderRadius);
             }
         }
 
@@ -345,7 +345,7 @@ namespace Yordi.Controls
             using (LinearGradientBrush brush = new LinearGradientBrush(barRect.Value, Color.White, colorProgressPoint, linearOrientation))
             {
                 brush.TranslateTransform(progressPosition, 0);
-                graphics.FillRectangle(brush, barRect.Value);
+                graphics.FillRoundedRectangle(brush, barRect.Value, BorderRadius);
             }
         }
 

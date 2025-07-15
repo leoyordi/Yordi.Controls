@@ -67,7 +67,7 @@
             pb.BackgroundColor = Color.Transparent;
             pb.BarColor = Color.FromArgb(0, 41, 81);
             pb.BorderEdges = RectangleEdgeFilter.All;
-            pb.BorderRadius = 0;
+            pb.BorderRadius = 5;
             pb.BorderStyle = BorderStyle.None;
             pb.BorderWidth = 0;
             pb.ColorProgressPoint = Color.Yellow;
@@ -75,15 +75,15 @@
             pb.HabilitaDimensionar = false;
             pb.Infinite = true;
             pb.Location = new Point(89, 363);
-            pb.Margin = new Padding(0);
+            pb.Margin = new Padding(1);
             pb.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
             pb.Name = "pb";
             pb.Opacity = 100;
             pb.Orientation = LineOrientation.Horizontal;
             pb.Padding = new Padding(1);
             pb.Progress = new decimal(new int[] { 10, 0, 0, 0 });
-            pb.ProgressPointType = ProgressPointType.Bar;
-            pb.ShowPercentage = true;
+            pb.ProgressPointType = ProgressPointType.Gradient;
+            pb.ShowPercentage = false;
             pb.ShowText = true;
             pb.Size = new Size(255, 17);
             pb.TabIndex = 1;

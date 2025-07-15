@@ -83,6 +83,7 @@
 
 
 ### Version History
+* 1.1.4 - Acréscimo de utilização da propriedade ```BorderRadius``` em ```YProgressBar```.
 * 1.1.3 - Acréscimo de propriedade interna em ```YProgressBar``` para aceitar o valor real do progresso, e não apenas o limite de valor máximo. 
     Isso permite que o controle seja usado como um indicador de progresso, e não apenas como uma barra de progresso.
     Além disso, foram adicionadas as propriedades públicas ```ShowText``` e ```ShowPercentage``` que definem o que deverá ser mostrado em ```YProgressBar```: texto ou valor real.
