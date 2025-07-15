@@ -9,8 +9,8 @@ namespace Yordi.Controls
         private int radius = 5;
         private int arrowSize = 10;
         private Control? sender;
-        private Size tooltipSize;
-        private Size textSize;
+        private SizeF tooltipSize;
+        private SizeF textSize;
         private int paddingH = 0, paddingV = 0;
         private Point? controlPosition;
         private Font font = SystemFonts.DefaultFont;
@@ -105,7 +105,7 @@ namespace Yordi.Controls
             IsBalloon = true;
         }
 
-        protected void Tooltip_Draw(object? sender, DrawToolTipEventArgs e)
+        protected void Tooltip_Draw_original(object? sender, DrawToolTipEventArgs e)
         {
             if (!IsBalloon)
             {
@@ -125,7 +125,7 @@ namespace Yordi.Controls
             int y;
             var p = (sender.Size.Height - controlPosition.Value.Y) - tooltipSize.Height;
             if (p < 0)
-                y = p * -1;
+                y = (int)p * -1;
             else
                 y = arrowSize;
 
@@ -148,12 +148,36 @@ namespace Yordi.Controls
             //    g.DrawLine(pen, x, y, w, h);
 
         }
+                TextFormatFlags flags = TextFormatFlags.Left | TextFormatFlags.Top | TextFormatFlags.WordBreak;
         protected void Tooltip_Popup(object? sender, PopupEventArgs e)
         {
             if (sender is not ToolTip tooltip || e.AssociatedControl == null) return;
+            PaddingText(e);
+            CalculateTextSize(e, false);
+            e.ToolTipSize = Size.Round(tooltipSize);
+        }
+        private void CalculateTextSize(PopupEventArgs e, bool textRenderer = true)
+        {
+            if (e.AssociatedControl == null) return;
+            string? txt = GetToolTip(e.AssociatedControl);
+            if (string.IsNullOrEmpty(txt)) return;
+            if (textRenderer)
+            {
+                textSize = TextRenderer.MeasureText(txt, font, new Size(200, 0), flags);
+            }
+            else
+            {
+                using (Graphics g = Graphics.FromHwnd(IntPtr.Zero))
+                    textSize = g.MeasureString(txt, font);
+            }
+            tooltipSize = new SizeF(textSize.Width + paddingH, textSize.Height + paddingV);
+        }
+
+        private void PaddingText(PopupEventArgs e)
+        {
             paddingH = 0;
             paddingV = 0;
-            if (e.AssociatedControl.Parent != null)
+            if (e?.AssociatedControl?.Parent != null)
             {
                 paddingH = e.AssociatedControl.Parent.Padding.Horizontal;
                 paddingV = e.AssociatedControl.Parent.Padding.Vertical;
@@ -165,14 +189,20 @@ namespace Yordi.Controls
                     paddingH = arrowSizeX2;
                 if (paddingV < arrowSizeX2)
                     paddingV = arrowSizeX2;
-                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), font);
-            }
-            else
-                textSize = TextRenderer.MeasureText(tooltip.GetToolTip(e.AssociatedControl), font);
+            }            
+        }
 
-            tooltipSize = new Size(textSize.Width + paddingH, textSize.Height + paddingV);
-            e.ToolTipSize = tooltipSize;
-            
+        protected void Tooltip_Draw(object? sender, DrawToolTipEventArgs e)
+        {
+            if (!IsBalloon)
+            {
+                DrawPointer(e.Graphics);
+                using (SolidBrush brush = new SolidBrush(CurrentTooltipTheme.BackColor))
+                    e.Graphics.FillRectangle(brush, e.Bounds);
+                using (Pen pen = new Pen(CurrentTooltipTheme.BackColor))
+                    e.Graphics.DrawRectangle(pen, e.Bounds);
+                TextRenderer.DrawText(e.Graphics, e.ToolTipText, CurrentTooltipTheme.Font, e.Bounds, Color.White, flags);
+            }
         }
 
     }

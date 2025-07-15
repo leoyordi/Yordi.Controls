@@ -12,7 +12,7 @@ namespace Yordi.Controls
     {
 
         protected Point mouseDownLocation;
-        public IContainer? components { get; set; } = null;
+        protected IContainer? components = null;
         private bool _enableDrag;
         private bool _enableMove;
         private Pen borderPen = new Pen(ControlPaint.Light(Color.Transparent, 0.0f), 0);

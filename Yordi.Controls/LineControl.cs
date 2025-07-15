@@ -2,11 +2,6 @@ using System.Drawing.Drawing2D;
 
 namespace Yordi.Controls
 {
-    public enum LineOrientation
-    {
-        Horizontal,
-        Vertical
-    }
     public enum AnimationType
     {
         None,
@@ -28,11 +23,11 @@ namespace Yordi.Controls
         private Color lineColor;
         //private int lineThickness;
         //private int lineBlink;
-        private int animationOffset = 0;
-        private int animationJump = 1;
-        private int animationInterval = 400;
+        protected int animationOffset = 0;
+        protected int animationJump = 1;
+        protected int animationInterval = 400;
         private bool animate = false;
-        private System.Windows.Forms.Timer animationTimer;
+        protected System.Windows.Forms.Timer animationTimer;
 
         #region Construtores
         /// <summary>

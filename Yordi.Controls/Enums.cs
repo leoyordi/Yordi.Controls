@@ -10,4 +10,10 @@
         TopLeft,
         BottomRight
     }
+    public enum LineOrientation
+    {
+        Horizontal,
+        Vertical
+    }
+
 }
