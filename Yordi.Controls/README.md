@@ -83,6 +83,8 @@
 
 
 ### Version History
+* 1.1.5 - Acréscimo da propriedade ```ColorTextByContrast``` em ```DataGridViewProgressbarColumn```, que define se o texto da barra de progresso deve ser colorido de acordo 
+com o contraste do fundo ou se baseado na propriedade ```ForeColor```.    
 * 1.1.4 - Acréscimo de utilização da propriedade ```BorderRadius``` em ```YProgressBar```.
 * 1.1.3 - Acréscimo de propriedade interna em ```YProgressBar``` para aceitar o valor real do progresso, e não apenas o limite de valor máximo. 
     Isso permite que o controle seja usado como um indicador de progresso, e não apenas como uma barra de progresso.

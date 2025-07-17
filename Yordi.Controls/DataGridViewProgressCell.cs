@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Windows.Forms;
 
@@ -54,6 +55,13 @@ namespace Yordi.Controls
             }
         }
         private bool _decrementViewerValue = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether text should be colored based on contrast.
+        /// If true, text color will be adjusted based on the background color of the progress bar.
+        /// If false, text will use the cell's foreground color.
+        /// </summary>
+        public bool ColorTextByContrast { get; set; } = false;
 
         // Fallback padrão caso nem célula nem coluna tenham ranges definidos
         private static readonly List<ProgressBarColorRange> fallbackColorRanges = new()
@@ -125,7 +133,6 @@ namespace Yordi.Controls
                 float percentage = (progressVal / 100.0f);
 
                 using var backColorBrush = new SolidBrush(cellStyle.BackColor);
-                using var foreColorBrush = new SolidBrush(cellStyle.ForeColor);
 
                 base.Paint(g, clipBounds, cellBounds,
                  rowIndex, cellState, value, formattedValue, errorText,
@@ -134,30 +141,76 @@ namespace Yordi.Controls
                 if (percentage > 0.0)
                 {
                     var limit = Math.Min(percentage, 1.0f);
+                    var widthValue = Convert.ToInt32((limit * cellBounds.Width - 4));
+                    var barValue = new Rectangle(cellBounds.X + 2, cellBounds.Y + 2, widthValue, cellBounds.Height - 4);
                     var barColor = GetColorForValue(progressVal);
                     using var barBrush = new SolidBrush(barColor);
-                    g.FillRectangle(barBrush, cellBounds.X + 2, cellBounds.Y + 2, Convert.ToInt32((limit * cellBounds.Width - 4)), cellBounds.Height - 4);
+                    g.FillRectangle(barBrush, barValue);
 
-                    // Desenhar o texto do botão
-                    //g.DrawString(progressVal.ToString("0.##") + "%", cellStyle.Font, foreColorBrush, cellBounds.X + (cellBounds.Width / 2) - 5, cellBounds.Y + 2);
-                    TextFormatFlags align = TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
                     string txt;
                     if (!GetValueViewPattern())
                         txt = $"{progressVal.ToString("0.##")}%";
                     else
                         txt = $"{(100 - progressVal).ToString("0.##")}%";
-                    TextRenderer.DrawText(g, txt, cellStyle.Font, cellBounds, cellStyle.ForeColor, align);
+                    
+                    if (ColorTextByContrast)
+                    {
+                        var barDiff = new Rectangle(cellBounds.X + 2 + widthValue, cellBounds.Y + 2, cellBounds.Width - widthValue, cellBounds.Height - 4);
+                        DrawText(g, cellStyle, cellBounds, barValue, barDiff, txt, rowIndex, barColor);
+                    }
+                    else
+                    {
+                        TextFormatFlags align = TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+                        TextRenderer.DrawText(g, txt, cellStyle.Font, cellBounds, cellStyle.ForeColor, align);
+                    }
                 }
-                //else
-                //{
-                //if (this.DataGridView?.CurrentRow?.Index == rowIndex)
-                //    g.DrawString(txt, cellStyle.Font, new SolidBrush(cellStyle.SelectionForeColor), cellBounds.X + 6, cellBounds.Y + 2);
-                //else
-                //    g.DrawString(txt, cellStyle.Font, foreColorBrush, cellBounds.X + 6, cellBounds.Y + 2);
-
-                //}
             }
             catch (Exception) { }
+        }
+
+        private void DrawText(Graphics g, DataGridViewCellStyle cellStyle,
+                Rectangle cellBounds, Rectangle barValue, Rectangle barDiff,
+                string txt, int rowIndex, Color barColor)
+        {
+            // Desenha texto sobre a área da barra de progresso
+            Region oldClip = g.Clip;
+
+            // Determina a cor de fundo efetiva (prioridade: célula, linha, grid)
+            Color backColor = cellStyle.BackColor;
+            if (this.DataGridView != null)
+            {
+                var row = this.DataGridView.Rows[rowIndex];
+                if (row.DefaultCellStyle.BackColor != Color.Empty)
+                    backColor = row.DefaultCellStyle.BackColor;
+                else if (this.DataGridView.DefaultCellStyle.BackColor != Color.Empty)
+                    backColor = this.DataGridView.DefaultCellStyle.BackColor;
+            }
+
+            // Calcula a luminância para decidir a cor do texto
+            Color textColorBackgound = GraphicsExtension.GetContrastingTextColor(backColor);
+            Color textColorBar = GraphicsExtension.GetContrastingTextColor(barColor);
+
+                        
+            using (StringFormat sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            })
+            {
+                // Desenha texto sobre a área do fundo
+                g.SetClip(barDiff);
+                using (var brushBg = new SolidBrush(textColorBackgound))
+                    g.DrawString(txt, cellStyle.Font, brushBg, cellBounds, sf);
+
+                // Desenha texto sobre a área da barra
+                g.SetClip(barValue);
+                using (var brushBar = new SolidBrush(textColorBar))
+                    g.DrawString(txt, cellStyle.Font, brushBar, cellBounds, sf);
+
+
+                // Restaura o clip original
+                g.SetClip(oldClip, CombineMode.Replace);
+            }
         }
     }
 

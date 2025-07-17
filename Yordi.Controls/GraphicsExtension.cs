@@ -40,7 +40,23 @@ namespace Yordi.Controls
 
 			return Color.FromArgb(newAlpha, originalColor.R, originalColor.G, originalColor.B);
         }
-
+        
+		/// <summary>
+		/// Determines the contrasting text color (black or white) for a given background color.
+		/// </summary>
+		/// <param name="bg">The background color for which to determine the contrasting text color.</param>
+		/// <param name="black">An optional color to use as the "black" text color. Defaults to <see cref="Color.Black"/> if not specified.</param>
+		/// <param name="white">An optional color to use as the "white" text color. Defaults to <see cref="Color.White"/> if not specified.</param>
+		/// <returns>The color that provides the best contrast against the specified background color. Returns the specified "black"
+		/// color if the background is light, or the specified "white" color if the background is dark.</returns>
+        public static Color GetContrastingTextColor(Color bg, Color? black = null, Color? white = null)
+        {
+            // Fórmula de luminância perceptual
+            double luminance = (0.299 * bg.R + 0.587 * bg.G + 0.114 * bg.B) / 255;
+			if (black == null) black = Color.Black;
+			if (white == null) white = Color.White;
+            return luminance > 0.5 ? black.Value : white.Value;
+        }
 
         public static GraphicsPath GenerateRoundedRectangle(
 				this Graphics graphics,

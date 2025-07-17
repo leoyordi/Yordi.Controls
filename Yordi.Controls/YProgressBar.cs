@@ -219,6 +219,14 @@ namespace Yordi.Controls
                 Invalidate();
             }
         }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether text should be colored based on contrast.
+        /// If true, text color will be adjusted based on the background color of the progress bar.
+        /// If false, text will use the ForeColor property.
+        /// </summary>
+        public bool ColorTextByContrast { get; set; } = false;
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -267,7 +275,6 @@ namespace Yordi.Controls
                     DrawMovingGradient(graphics, progressPosition);
                     break;
             }
-            DrawText(graphics);
         }
 
         private void DrawProgressCircle(Graphics graphics, int progressPosition)
@@ -279,9 +286,11 @@ namespace Yordi.Controls
                 : new Rectangle(Margin.Left, (Height - diameter) - realPosition, diameter, diameter);
 
             using (Brush progressBrush = new SolidBrush(colorProgressPoint))
-            {
                 graphics.FillEllipse(progressBrush, circleRect);
-            }
+            if (ColorTextByContrast)
+                DrawTextForDashAndCircle(graphics, circleRect);
+            else
+                DrawText(graphics);
         }
 
         private void DrawProgressDash(Graphics graphics, int progressPosition)
@@ -299,7 +308,7 @@ namespace Yordi.Controls
             else
             {
                 x = Margin.Left;
-                y = Height - (progressPosition + (wMax/2));
+                y = Height - (progressPosition + (wMax / 2));
                 h = wMax / 2;
                 w = wMax;
             }
@@ -309,7 +318,93 @@ namespace Yordi.Controls
             {
                 graphics.FillRectangle(progressBrush, dashRect);
             }
+            if (ColorTextByContrast)
+                DrawTextForDashAndCircle(graphics, dashRect);
+            else
+                DrawText(graphics);
         }
+
+        private void DrawTextForDashAndCircle(Graphics graphics, Rectangle dashRect)
+        {
+            string progressText = showPercentage
+                                ? _progressRealValue.ToString("0.##") + "%"
+                                : text;
+            using (StringFormat sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            })
+            {
+                // Medir área do texto
+                SizeF textSize = graphics.MeasureString(progressText, Font, ClientRectangle.Size, sf);
+                Rectangle textRect = new Rectangle(
+                    ClientRectangle.X + (ClientRectangle.Width - (int)textSize.Width) / 2,
+                    ClientRectangle.Y + (ClientRectangle.Height - (int)textSize.Height) / 2,
+                    (int)textSize.Width,
+                    (int)textSize.Height);
+
+                // 1. Desenha texto com ForeColor (background)
+                Color normalColorText = GraphicsExtension.GetContrastingTextColor(BackColor);
+                graphics.DrawString(progressText, Font, new SolidBrush(normalColorText), ClientRectangle, sf);
+
+                // 2. Se houver interseção, desenha texto sobreposto com cor contrastante ao dash
+                Rectangle intersectRect = Rectangle.Intersect(textRect, dashRect);
+                if (!intersectRect.IsEmpty)
+                {
+                    Region oldClip = graphics.Clip;
+                    graphics.SetClip(intersectRect);
+                    Color contrastColor = GraphicsExtension.GetContrastingTextColor(colorProgressPoint);
+                    graphics.DrawString(progressText, Font, new SolidBrush(contrastColor), ClientRectangle, sf);
+                    graphics.SetClip(oldClip, CombineMode.Replace);
+                }
+            }
+        }
+
+        private void DrawTextOverGradient(Graphics graphics, Rectangle barRect, LinearGradientBrush gradientBrush)
+        {
+            if (!showText && !showPercentage) return;
+            string progressText = showPercentage ? _progressRealValue.ToString("0.##") + "%" : text;
+            using (StringFormat sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+            {
+                // Medir o texto para centralizar
+                SizeF textSize = graphics.MeasureString(progressText, Font, barRect.Size, sf);
+                float startX = barRect.X + (barRect.Width - textSize.Width) / 2;
+                float y = barRect.Y + (barRect.Height - textSize.Height) / 2;
+
+                // Para cada caractere, calcula a posição e cor do gradiente
+                float x = startX;
+                foreach (char c in progressText)
+                {
+                    string s = c.ToString();
+                    SizeF charSize = graphics.MeasureString(s, Font);
+                    float charCenterX = x + charSize.Width / 2;
+
+                    // Calcula a cor do gradiente na posição do caractere
+                    float ratio = (charCenterX - barRect.X) / barRect.Width;
+                    Color gradColor = InterpolateGradientColor(gradientBrush, ratio);
+
+                    // Cor de contraste
+                    Color textColor = GraphicsExtension.GetContrastingTextColor(gradColor);
+
+                    using (var brush = new SolidBrush(textColor))
+                        graphics.DrawString(s, Font, brush, x, y);
+
+                    x += charSize.Width;
+                }
+            }
+        }
+
+        // Função para interpolar cor do gradiente (simplificada para LinearGradientBrush horizontal)
+        private Color InterpolateGradientColor(LinearGradientBrush brush, float ratio)
+        {
+            Color c1 = brush.LinearColors[0];
+            Color c2 = brush.LinearColors[1];
+            int r = (int)(c1.R + (c2.R - c1.R) * ratio);
+            int g = (int)(c1.G + (c2.G - c1.G) * ratio);
+            int b = (int)(c1.B + (c2.B - c1.B) * ratio);
+            return Color.FromArgb(r, g, b);
+        }
+
         private void DrawText(Graphics graphics)
         {
             if (!showText && !showPercentage) return;
@@ -318,21 +413,82 @@ namespace Yordi.Controls
                 progressText = _progressRealValue.ToString("0.##") + "%";
             else if (showText)
                 progressText = text;
+            
+            
             TextRenderer.DrawText(graphics, progressText, Font, ClientRectangle, ForeColor,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
         }
+
+        private void DrawText(Graphics g, float progressVal, Color barColor, Rectangle cellBounds, Rectangle barValue, Rectangle barDiff)
+        {
+            if (!showText && !showPercentage) return;
+            string txt = string.Empty;
+            if (showPercentage)
+                txt = _progressRealValue.ToString("0.##") + "%";
+            else if (showText)
+                txt = text;
+
+            // Desenha texto sobre a área da barra de progresso
+            Region oldClip = g.Clip;
+
+            // Determina a cor de fundo efetiva 
+            Color backColor = barColor;
+            if (backColor == Color.Transparent)
+            {
+                if (backgroundColor != Color.Transparent)
+                    backColor = backgroundColor;
+                else if (this.BackColor != Color.Transparent)
+                    backColor = this.BackColor;
+                else if (this.Parent?.BackColor != null && Parent.BackColor != Color.Transparent)
+                    backColor = Parent.BackColor;
+            }
+
+            // Calcula a luminância para decidir a cor do texto
+            Color textColorBackgound = GraphicsExtension.GetContrastingTextColor(backColor);
+            Color textColorBar = GraphicsExtension.GetContrastingTextColor(barColor);
+
+            TextFormatFlags align = TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
+
+            using (StringFormat sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            })
+            {
+                // Desenha texto sobre a área do fundo
+                g.SetClip(barDiff);
+                using (var brushBg = new SolidBrush(textColorBackgound))
+                    g.DrawString(txt, Font, brushBg, cellBounds, sf);
+
+                // Desenha texto sobre a área da barra
+                g.SetClip(barValue);
+                using (var brushBar = new SolidBrush(textColorBar))
+                    g.DrawString(txt, Font, brushBar, cellBounds, sf);
+
+
+                // Restaura o clip original
+                g.SetClip(oldClip, CombineMode.Replace);
+            }
+        }
+
         private void DrawProgressBar(Graphics graphics, int progressPosition)
         {
             int h = Height - Margin.Vertical;
             int w = Width - Margin.Horizontal;
-            Rectangle barProgressRect = Orientation == LineOrientation.Horizontal
+            Rectangle barValue = Orientation == LineOrientation.Horizontal
                 ? new Rectangle(Margin.Left, Margin.Top, progressPosition, h)
                 : new Rectangle(Margin.Left, Height - progressPosition, w, progressPosition);
+            Rectangle barDiff = Orientation == LineOrientation.Horizontal
+                ? new Rectangle(Margin.Left + progressPosition, barValue.Y, w - progressPosition, h)
+                : new Rectangle(Margin.Left, Margin.Top + progressPosition, w, h - progressPosition);
 
             using (Brush progressBrush = new SolidBrush(colorProgressPoint))
-            {
-                graphics.FillRoundedRectangle(progressBrush, barProgressRect, BorderRadius);
-            }
+                graphics.FillRoundedRectangle(progressBrush, barValue, BorderRadius);
+
+            if (ColorTextByContrast)
+                DrawText(graphics, progressPosition, colorProgressPoint, ClientRectangle, barValue, barDiff);
+            else
+                DrawText(graphics);
         }
 
         private void DrawMovingGradient(Graphics graphics, int progressPosition)
@@ -346,7 +502,9 @@ namespace Yordi.Controls
             {
                 brush.TranslateTransform(progressPosition, 0);
                 graphics.FillRoundedRectangle(brush, barRect.Value, BorderRadius);
+                //DrawTextOverGradient(graphics, barRect.Value, brush);
             }
+            DrawText(graphics);
         }
 
         private void AnimationTimer_Tick(object? sender, EventArgs e)

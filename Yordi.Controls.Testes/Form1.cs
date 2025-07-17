@@ -37,7 +37,7 @@ namespace Yordi.Controls.Testes
         {
             var cores = new List<ProgressBarColorRange>()
                         {
-                            new ProgressBarColorRange { Min = 0, Max = 90, Color = Color.Red },
+                            new ProgressBarColorRange { Min = 0, Max = 90, Color = Color.Purple },
                             new ProgressBarColorRange { Min = 90, Max = 97, Color = Color.Yellow },
                             new ProgressBarColorRange { Min = 97.1f, Max = 103, Color = Color.FromArgb(100,221,23) },
                             new ProgressBarColorRange { Min = 103.1f, Max = 110, Color = Color.Yellow },
@@ -72,8 +72,11 @@ namespace Yordi.Controls.Testes
         {
             foreach (DataGridViewRow row in dgv.Rows)
             {
-                if (row.Cells[row.Cells.Count -1] is DataGridViewProgressCell cell)
+                if (row.Cells[row.Cells.Count - 1] is DataGridViewProgressCell cell)
+                {
                     cell.DecrementViewerValue = chkDGVDecrement.Checked;
+                    cell.ColorTextByContrast = chkDGVDecrement.Checked;
+                }
             }
             dgv.Refresh();
         }
@@ -108,6 +111,10 @@ namespace Yordi.Controls.Testes
             {
                 pb.ColorProgressPoint = Color.Red;
                 pb.Text = "Fora do padrão";
+            }
+            foreach (DataGridViewRow row in dgv.Rows)
+            {
+                row.Cells[2].Value = progress;
             }
         }
 
