@@ -76,15 +76,15 @@
             pb.Infinite = true;
             pb.Location = new Point(89, 363);
             pb.Margin = new Padding(1);
-            pb.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
+            pb.Maximum = 100;
             pb.Name = "pb";
             pb.Opacity = 100;
             pb.Orientation = LineOrientation.Horizontal;
             pb.Padding = new Padding(1);
             pb.Progress = new decimal(new int[] { 10, 0, 0, 0 });
-            pb.ProgressPointType = ProgressPointType.Gradient;
-            pb.ShowPercentage = false;
-            pb.ShowText = true;
+            pb.ProgressPointType = ProgressPointType.Bar;
+            pb.ShowPercentage = true;
+            pb.ShowText = false;
             pb.Size = new Size(255, 17);
             pb.TabIndex = 1;
             // 

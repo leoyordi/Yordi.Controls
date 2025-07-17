@@ -246,9 +246,9 @@ namespace Yordi.Controls
             else
             {
                 if (Orientation == LineOrientation.Horizontal)
-                    progressPosition = (int)(Width * progressRatio);
+                    progressPosition = (int)(barRect.Value.Width * progressRatio);
                 else
-                    progressPosition = (int)(Height * progressRatio);
+                    progressPosition = (int)(barRect.Value.Height * progressRatio);
             }
 
             // Desenhar o ponto de progresso ou gradiente
