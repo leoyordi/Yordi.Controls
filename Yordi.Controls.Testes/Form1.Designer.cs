@@ -118,6 +118,7 @@
             dgv.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgv.Location = new Point(597, 241);
             dgv.Name = "dgv";
+            dgv.RowTemplate.DefaultCellStyle.SelectionBackColor = Color.FromArgb(0, 0, 64);
             dgv.Size = new Size(645, 236);
             dgv.TabIndex = 3;
             // 

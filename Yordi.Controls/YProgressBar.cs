@@ -447,8 +447,6 @@ namespace Yordi.Controls
             Color textColorBackgound = GraphicsExtension.GetContrastingTextColor(backColor);
             Color textColorBar = GraphicsExtension.GetContrastingTextColor(barColor);
 
-            TextFormatFlags align = TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter;
-
             using (StringFormat sf = new StringFormat
             {
                 Alignment = StringAlignment.Center,

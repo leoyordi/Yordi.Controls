@@ -129,6 +129,7 @@ namespace Yordi.Controls
             if (value == null) return;
             try
             {
+                bool isSelected = (cellState & DataGridViewElementStates.Selected) != 0;
                 float progressVal = Convert.ToSingle(value);
                 float percentage = (progressVal / 100.0f);
 
@@ -156,7 +157,7 @@ namespace Yordi.Controls
                     if (ColorTextByContrast)
                     {
                         var barDiff = new Rectangle(cellBounds.X + 2 + widthValue, cellBounds.Y + 2, cellBounds.Width - widthValue, cellBounds.Height - 4);
-                        DrawText(g, cellStyle, cellBounds, barValue, barDiff, txt, rowIndex, barColor);
+                        DrawText(g, cellStyle, cellBounds, barValue, barDiff, txt, rowIndex, barColor, isSelected);
                     }
                     else
                     {
@@ -170,7 +171,7 @@ namespace Yordi.Controls
 
         private void DrawText(Graphics g, DataGridViewCellStyle cellStyle,
                 Rectangle cellBounds, Rectangle barValue, Rectangle barDiff,
-                string txt, int rowIndex, Color barColor)
+                string txt, int rowIndex, Color barColor, bool isSelected)
         {
             // Desenha texto sobre a área da barra de progresso
             Region oldClip = g.Clip;
@@ -179,11 +180,16 @@ namespace Yordi.Controls
             Color backColor = cellStyle.BackColor;
             if (this.DataGridView != null)
             {
-                var row = this.DataGridView.Rows[rowIndex];
-                if (row.DefaultCellStyle.BackColor != Color.Empty)
-                    backColor = row.DefaultCellStyle.BackColor;
-                else if (this.DataGridView.DefaultCellStyle.BackColor != Color.Empty)
-                    backColor = this.DataGridView.DefaultCellStyle.BackColor;
+                if (isSelected)
+                    backColor = this.DataGridView.DefaultCellStyle.SelectionBackColor;
+                else
+                {
+                    var row = this.DataGridView.Rows[rowIndex];
+                    if (row.DefaultCellStyle.BackColor != Color.Empty)
+                        backColor = row.DefaultCellStyle.BackColor;
+                    else if (this.DataGridView.DefaultCellStyle.BackColor != Color.Empty)
+                        backColor = this.DataGridView.DefaultCellStyle.BackColor;
+                }
             }
 
             // Calcula a luminância para decidir a cor do texto
