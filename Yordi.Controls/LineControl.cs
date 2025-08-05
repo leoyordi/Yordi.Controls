@@ -445,12 +445,7 @@ namespace Yordi.Controls
             if (left < 0) left = 0;
             if (right < 0) right = 0;
             if (top != base.Padding.Top || bottom != base.Padding.Bottom || left != base.Padding.Left || right != base.Padding.Right)
-            {
-                if (base.InvokeRequired)
-                    base.Invoke(new Action(() => base.Padding = new Padding(left, top, right, bottom)));
-                else
-                    base.Padding = new Padding(left, top, right, bottom);
-            }
+                SetControlPadding(new Padding(left, top, right, bottom));
         }
 
     }

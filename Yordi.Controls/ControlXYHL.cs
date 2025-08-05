@@ -253,14 +253,15 @@ namespace Yordi.Controls
             if (left < 1) left = 1;
             if (right < 1) right = 1;
             if (top != base.Padding.Top || bottom != base.Padding.Bottom || left != base.Padding.Left || right != base.Padding.Right)
-            {
-                if (base.InvokeRequired)
-                    base.Invoke(new Action(() => base.Padding = new Padding(left, top, right, bottom)));
-                else
-                    base.Padding = new Padding(left, top, right, bottom);
-            }
+                SetControlPadding(new Padding(left, top, right, bottom));
         }
-
+        protected void SetControlPadding(Padding padding)
+        {
+            if (base.InvokeRequired)
+                base.Invoke(new Action(() => base.Padding = padding));
+            else
+                base.Padding = padding;
+        }
         #region Eventos
         private int _subsClick = 0;
         private int _subsMouseClick = 0;
