@@ -22,7 +22,6 @@ namespace Yordi.Controls
         protected int animationOffset = 0;
         protected int animationJump = 1;
         protected int animationInterval = 400;
-        private bool animate = false;
         protected System.Windows.Forms.Timer animationTimer;
         private LineOrientation orientation;
         private Rectangle? barRect;

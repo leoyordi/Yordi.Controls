@@ -37,7 +37,7 @@ namespace Yordi.Controls.Testes
         {
             var cores = new List<ProgressBarColorRange>()
                         {
-                            new ProgressBarColorRange { Min = 0, Max = 90, Color = Color.Purple },
+                            new ProgressBarColorRange { Min = 0, Max = 90, Color = Laranja },
                             new ProgressBarColorRange { Min = 90, Max = 97, Color = Color.Yellow },
                             new ProgressBarColorRange { Min = 97.1f, Max = 103, Color = Color.FromArgb(100,221,23) },
                             new ProgressBarColorRange { Min = 103.1f, Max = 110, Color = Color.Yellow },
@@ -92,7 +92,7 @@ namespace Yordi.Controls.Testes
                 progress += 1;
             TesteProgressBar();
         }
-
+        private Color Laranja = Color.FromArgb(236, 133, 0);
         private void TesteProgressBar()
         {
             pb.Progress = progress;
@@ -109,7 +109,7 @@ namespace Yordi.Controls.Testes
             }
             else
             {
-                pb.ColorProgressPoint = Color.Red;
+                pb.ColorProgressPoint = Laranja;
                 pb.Text = "Fora do padrão";
             }
             foreach (DataGridViewRow row in dgv.Rows)

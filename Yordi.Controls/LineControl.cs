@@ -73,20 +73,6 @@ namespace Yordi.Controls
             set { lineColor = value; Invalidate(); }
         }
 
-        ///// <summary>
-        ///// Obtém ou define a espessura da linha
-        ///// </summary>
-        //public int LineThickness
-        //{
-        //    get { return lineThickness; }
-        //    set
-        //    {
-        //        lineThickness = value;
-        //        lineBlink = lineThickness * 2;
-        //        Invalidate();
-        //    }
-        //}
-
 
         public AnimationType AnimationType
         {
@@ -446,5 +432,26 @@ namespace Yordi.Controls
             }
             Invalidate();
         }
+
+
+        protected override void PaddingMinimo(Padding padding)
+        {
+            var top = padding.Top;
+            var bottom = padding.Bottom;
+            var left = padding.Left;
+            var right = padding.Right;
+            if (top < 0) top = 0;
+            if (bottom < 0) bottom = 0;
+            if (left < 0) left = 0;
+            if (right < 0) right = 0;
+            if (top != base.Padding.Top || bottom != base.Padding.Bottom || left != base.Padding.Left || right != base.Padding.Right)
+            {
+                if (base.InvokeRequired)
+                    base.Invoke(new Action(() => base.Padding = new Padding(left, top, right, bottom)));
+                else
+                    base.Padding = new Padding(left, top, right, bottom);
+            }
+        }
+
     }
 }

@@ -29,6 +29,7 @@ namespace Yordi.Controls
             new ProgressBarColorRange { Min = 110, Max = int.MaxValue, Color = Color.Purple }
         };
         public bool DecrementViewerValue { get; set; } = false;
+        public bool ColorTextByContrast { get; set; } = false;
 
         public DataGridViewProgressColumn()
         {
@@ -61,7 +62,17 @@ namespace Yordi.Controls
         /// If true, text color will be adjusted based on the background color of the progress bar.
         /// If false, text will use the cell's foreground color.
         /// </summary>
-        public bool ColorTextByContrast { get; set; } = false;
+        public bool ColorTextByContrast 
+        { 
+            get => _colorTextByContrast;
+            set
+            {
+                _colorTextByContrast = value;
+                if (this.OwningColumn is DataGridViewProgressColumn col)
+                    col.ColorTextByContrast = value;
+            }
+        }
+        private bool _colorTextByContrast = false;
 
         // Fallback padrão caso nem célula nem coluna tenham ranges definidos
         private static readonly List<ProgressBarColorRange> fallbackColorRanges = new()
@@ -150,7 +161,7 @@ namespace Yordi.Controls
 
                     string txt;
                     if (!GetValueViewPattern())
-                        txt = $"{progressVal.ToString("0.##")}%";
+                        txt = $"{progressVal:0.##}%";
                     else
                         txt = $"{(100 - progressVal).ToString("0.##")}%";
                     

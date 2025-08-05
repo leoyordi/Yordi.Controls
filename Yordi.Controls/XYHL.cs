@@ -59,8 +59,6 @@ namespace Yordi.Controls
         public int ReferenceWidth { get; set; } = 1920; // Ex: 1920
         public int ReferenceHeight { get; set; } = 1080; // Ex: 1080
 
-        private decimal widthScale;
-        private decimal heightScale;
         [BDIgnorar, JsonIgnore]
         public Size Size => new Size((int)L, (int)H);
         [BDIgnorar, JsonIgnore]
