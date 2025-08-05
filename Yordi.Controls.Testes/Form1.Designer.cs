@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             lineControl1 = new LineControl();
             pb = new YProgressBar();
             yRoundProgressBar1 = new YRoundProgressBar();
@@ -39,7 +40,7 @@
             // lineControl1
             // 
             lineControl1.AlphaForDisabled = 50;
-            lineControl1.Animate = true;
+            lineControl1.Animate = false;
             lineControl1.AnimationInterval = 400;
             lineControl1.AnimationType = AnimationType.Gradient;
             lineControl1.BackColor = Color.Transparent;
@@ -47,14 +48,14 @@
             lineControl1.BorderRadius = 0;
             lineControl1.BorderStyle = BorderStyle.None;
             lineControl1.BorderWidth = 0;
-            lineControl1.HabilitaArrastar = false;
-            lineControl1.HabilitaDimensionar = false;
+            lineControl1.HabilitaArrastar = true;
+            lineControl1.HabilitaDimensionar = true;
             lineControl1.LineColor = Color.Black;
             lineControl1.Location = new Point(203, 82);
+            lineControl1.Margin = new Padding(0);
             lineControl1.Name = "lineControl1";
             lineControl1.Opacity = 100;
             lineControl1.Orientation = LineOrientation.Horizontal;
-            lineControl1.Padding = new Padding(1);
             lineControl1.Size = new Size(362, 43);
             lineControl1.TabIndex = 0;
             lineControl1.Text = "lineControl1";

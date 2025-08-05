@@ -173,8 +173,6 @@ namespace Yordi.Controls
         {
             get
             {
-                _padding = GetControlPadding();
-                PaddingMinimo();
                 return _padding;
             }
             set

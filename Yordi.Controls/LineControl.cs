@@ -1,4 +1,5 @@
 using System.Drawing.Drawing2D;
+using System.Windows.Forms;
 
 namespace Yordi.Controls
 {
@@ -111,6 +112,25 @@ namespace Yordi.Controls
                 Invalidate();
             }
         }
+
+
+        public override Padding Padding
+        {
+            get
+            {
+                _padding = GetControlPadding();
+                PaddingMinimo();
+                return _padding;
+            }
+            set
+            {
+                _padding = value;
+                PaddingMinimo();
+                Invalidate();
+            }
+        }
+        private Padding _padding = new Padding(1, 1, 1, 1);
+
 
         int line;
 
@@ -434,19 +454,30 @@ namespace Yordi.Controls
         }
 
 
-        protected override void PaddingMinimo(Padding padding)
+        protected override void PaddingMinimo()
         {
-            var top = padding.Top;
-            var bottom = padding.Bottom;
-            var left = padding.Left;
-            var right = padding.Right;
+            var top = _padding.Top;
+            var bottom = _padding.Bottom;
+            var left = _padding.Left;
+            var right = _padding.Right;
             if (top < 0) top = 0;
             if (bottom < 0) bottom = 0;
             if (left < 0) left = 0;
             if (right < 0) right = 0;
             if (top != base.Padding.Top || bottom != base.Padding.Bottom || left != base.Padding.Left || right != base.Padding.Right)
-                SetControlPadding(new Padding(left, top, right, bottom));
+            {
+                _padding = new Padding(left, top, right, bottom);
+                SetControlPadding(_padding);
+            }
         }
+        //protected override void SetControlPadding(Padding padding)
+        //{
+        //    base.SetControlPadding(padding);
+        //}
+        //protected override Padding GetControlPadding()
+        //{
+        //    return base.GetControlPadding();
+        //}
 
     }
 }
