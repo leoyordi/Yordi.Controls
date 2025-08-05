@@ -440,8 +440,8 @@ namespace Yordi.Controls
             if (repo == null) return Task.CompletedTask;
             if (positionSize.X < 0) positionSize.X = 1;
             if (positionSize.Y < 0) positionSize.Y = 1;
-            if (positionSize.L < 10) positionSize.L = 10;
-            if (positionSize.H < 10) positionSize.H = 10;
+            if (positionSize.L < 2) positionSize.L = 2;
+            if (positionSize.H < 2) positionSize.H = 2;
 
             if (!salvando)
             {
