@@ -83,6 +83,7 @@
 
 
 ### Version History
+* 1.1.5.3 - Ajustes na propriedade ```Padding``` de ```LineControl```, que não estava funcionando corretamente (Overflow Exception).
 * 1.1.5 - Acréscimo da propriedade ```ColorTextByContrast``` em ```DataGridViewProgressbarColumn```, que define se o texto da barra de progresso deve ser colorido de acordo 
 com o contraste do fundo ou se baseado na propriedade ```ForeColor```.    
 * 1.1.4 - Acréscimo de utilização da propriedade ```BorderRadius``` em ```YProgressBar```.

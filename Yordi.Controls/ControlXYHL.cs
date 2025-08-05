@@ -169,20 +169,22 @@ namespace Yordi.Controls
         private int opacity = 100;
 
 
-        public new Padding Padding
+        public new virtual Padding Padding
         {
             get
             {
-                PaddingMinimo(base.Padding);
-                return base.Padding;
+                _padding = GetControlPadding();
+                PaddingMinimo();
+                return _padding;
             }
             set
             {
-                PaddingMinimo(value);
+                _padding = value;
+                PaddingMinimo();
                 Invalidate();
             }
-
         }
+        private Padding _padding = new Padding(1, 1, 1, 1);
 
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), Browsable(false)]
         public bool IsRuntime { get => (HabilitaDimensionar && Resizing) || (HabilitaArrastar && Moving); }
@@ -242,26 +244,35 @@ namespace Yordi.Controls
             Invalidate();
         }
 
-        protected virtual void PaddingMinimo(Padding padding)
+        protected virtual void PaddingMinimo()
         {
-            var top = padding.Top;
-            var bottom = padding.Bottom;
-            var left = padding.Left;
-            var right = padding.Right;
+            var top = _padding.Top;
+            var bottom = _padding.Bottom;
+            var left = _padding.Left;
+            var right = _padding.Right;
             if (top < 1) top = 1;
             if (bottom < 1) bottom = 1;
             if (left < 1) left = 1;
             if (right < 1) right = 1;
             if (top != base.Padding.Top || bottom != base.Padding.Bottom || left != base.Padding.Left || right != base.Padding.Right)
-                SetControlPadding(new Padding(left, top, right, bottom));
+            {
+                _padding = new Padding(left, top, right, bottom);
+                SetControlPadding(_padding);
+            }
         }
-        protected void SetControlPadding(Padding padding)
+        protected virtual void SetControlPadding(Padding padding)
         {
             if (base.InvokeRequired)
                 base.Invoke(new Action(() => base.Padding = padding));
             else
                 base.Padding = padding;
         }
+        protected virtual Padding GetControlPadding()
+        {
+            return base.Padding;
+        }
+
+
         #region Eventos
         private int _subsClick = 0;
         private int _subsMouseClick = 0;
