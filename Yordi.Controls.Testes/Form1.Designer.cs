@@ -34,6 +34,8 @@
             yRoundProgressBar1 = new YRoundProgressBar();
             dgv = new DataGridView();
             chkDGVDecrement = new CheckBox();
+            lineControl2 = new LineControl();
+            lineControl3 = new LineControl();
             ((System.ComponentModel.ISupportInitialize)dgv).BeginInit();
             SuspendLayout();
             // 
@@ -42,7 +44,7 @@
             lineControl1.AlphaForDisabled = 50;
             lineControl1.Animate = false;
             lineControl1.AnimationInterval = 400;
-            lineControl1.AnimationType = AnimationType.Gradient;
+            lineControl1.AnimationType = AnimationType.None;
             lineControl1.BackColor = Color.Transparent;
             lineControl1.BorderEdges = RectangleEdgeFilter.All;
             lineControl1.BorderRadius = 0;
@@ -51,11 +53,12 @@
             lineControl1.HabilitaArrastar = true;
             lineControl1.HabilitaDimensionar = true;
             lineControl1.LineColor = Color.Black;
-            lineControl1.Location = new Point(203, 82);
+            lineControl1.Location = new Point(204, 102);
+            lineControl1.Margin = new Padding(0);
             lineControl1.Name = "lineControl1";
             lineControl1.Opacity = 100;
             lineControl1.Orientation = LineOrientation.Horizontal;
-            lineControl1.Size = new Size(362, 43);
+            lineControl1.Size = new Size(362, 12);
             lineControl1.TabIndex = 0;
             lineControl1.Text = "lineControl1";
             // 
@@ -133,11 +136,59 @@
             chkDGVDecrement.UseVisualStyleBackColor = true;
             chkDGVDecrement.Click += chkDGVDecrement_Click;
             // 
+            // lineControl2
+            // 
+            lineControl2.AlphaForDisabled = 50;
+            lineControl2.Animate = false;
+            lineControl2.AnimationInterval = 400;
+            lineControl2.AnimationType = AnimationType.None;
+            lineControl2.BackColor = Color.Transparent;
+            lineControl2.BorderEdges = RectangleEdgeFilter.All;
+            lineControl2.BorderRadius = 0;
+            lineControl2.BorderStyle = BorderStyle.None;
+            lineControl2.BorderWidth = 0;
+            lineControl2.HabilitaArrastar = true;
+            lineControl2.HabilitaDimensionar = true;
+            lineControl2.LineColor = Color.Black;
+            lineControl2.Location = new Point(555, 87);
+            lineControl2.Margin = new Padding(0);
+            lineControl2.Name = "lineControl2";
+            lineControl2.Opacity = 100;
+            lineControl2.Orientation = LineOrientation.Vertical;
+            lineControl2.Size = new Size(11, 67);
+            lineControl2.TabIndex = 5;
+            lineControl2.Text = "lineControl2";
+            // 
+            // lineControl3
+            // 
+            lineControl3.AlphaForDisabled = 50;
+            lineControl3.Animate = true;
+            lineControl3.AnimationInterval = 400;
+            lineControl3.AnimationType = AnimationType.Gradient;
+            lineControl3.BackColor = Color.Transparent;
+            lineControl3.BorderEdges = RectangleEdgeFilter.All;
+            lineControl3.BorderRadius = 0;
+            lineControl3.BorderStyle = BorderStyle.None;
+            lineControl3.BorderWidth = 0;
+            lineControl3.HabilitaArrastar = false;
+            lineControl3.HabilitaDimensionar = false;
+            lineControl3.LineColor = Color.Black;
+            lineControl3.Location = new Point(94, 144);
+            lineControl3.Margin = new Padding(0);
+            lineControl3.Name = "lineControl3";
+            lineControl3.Opacity = 100;
+            lineControl3.Orientation = LineOrientation.Horizontal;
+            lineControl3.Size = new Size(340, 23);
+            lineControl3.TabIndex = 6;
+            lineControl3.Text = "lineControl3";
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(1272, 575);
+            Controls.Add(lineControl3);
+            Controls.Add(lineControl2);
             Controls.Add(chkDGVDecrement);
             Controls.Add(dgv);
             Controls.Add(yRoundProgressBar1);
@@ -157,5 +208,7 @@
         private YRoundProgressBar yRoundProgressBar1;
         private DataGridView dgv;
         private CheckBox chkDGVDecrement;
+        private LineControl lineControl2;
+        private LineControl lineControl3;
     }
 }

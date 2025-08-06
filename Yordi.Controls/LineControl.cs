@@ -1,5 +1,5 @@
+using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Windows.Forms;
 
 namespace Yordi.Controls
 {
@@ -143,53 +143,27 @@ namespace Yordi.Controls
         {
             Graphics graphics = e.Graphics;
             graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            DrawBackground(graphics);
-            base.OnPaint(e);
+            //DrawBackground(graphics);
+            //base.OnPaint(e);
             if (animationType == AnimationType.Gradient)
                 DrawMovingGradient(graphics);
             else if (animationType == AnimationType.Circle)
                 DrawMovingCircle(graphics);
             else
-            {
-                int x, y, h, w;
-                int lineFull;
-                if (orientation == LineOrientation.Horizontal)
-                {
-                    x = 0;
-                    w = Width;
-                    h = Height / 2;
-                    y = h;
-                    if (Margin.Vertical > 0)
-                        lineFull = Height - Margin.Vertical;
-                    else
-                        lineFull = Height - 2; // sempre 2 pontos afastados do limite
-                }
-                else
-                {
-                    y = 0;
-                    w = Width / 2;
-                    h = Height;
-                    x = w;
-                    if (Margin.Horizontal > 0)
-                        lineFull = Width - Margin.Horizontal;
-                    else
-                        lineFull = Width - 2; // sempre 2 pontos afastados do limite
-
-                }
-                if (lineFull <= 0)
-                    lineFull = 1; // sempre 1 ponto
-                if (blink && animate)
-                    line = lineFull - 2;
-                else
-                    line = lineFull;
-                //line = blink && animate ? lineBlink : lineThickness;
-                if (line < 0)
-                    line = 0; // sempre 0 ponto;
-                using (Pen pen = new Pen(lineColor, line))
-                    e.Graphics.DrawLine(pen, x, y, w, h);
-            }
+                DrawRectangle(graphics);
         }
 
+        private void DrawRectangle(Graphics graphics)
+        {
+            var oldSmoothing = graphics.SmoothingMode;
+            graphics.SmoothingMode = SmoothingMode.None;
+            int x = Margin.Left, y = Margin.Top;
+            int w = Width - Margin.Horizontal;
+            int h = Height - Margin.Vertical;
+            using (SolidBrush brush = new SolidBrush(lineColor))
+                graphics.FillRectangle(brush, x, y, w, h);
+            graphics.SmoothingMode = oldSmoothing;
+        }
         /// <summary>
         /// Desenha o fundo do controle
         /// </summary>
