@@ -83,6 +83,7 @@
 
 
 ### Version History
+* 1.1.6.1 - Melhoramento do controle LineControl. Antialising foi retirado para evitar bordas falsas.
 * 1.1.6 - Acréscimo da propriedade ```RectangleEdgeFilter BorderEdges``` na interface ```IControlXYHL```, que define quais bordas do controle serão filtradas para o efeito de borda arredondada.
     Propriedade já era implementada em ```ControlXYHL``` e ```UserControlXYHL```, mas não estava na interface.
     Correções na ordem de verificação de tipo de controle em ```LimpaCampos```, ```HabilitaCampos``` e ```AtualizaControlesIndexados```
