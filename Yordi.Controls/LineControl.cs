@@ -38,13 +38,12 @@ namespace Yordi.Controls
         public LineControl(LineOrientation orientation)
         {
             this.orientation = orientation;
-            InitializeComponent();
             SetStyle(ControlStyles.SupportsTransparentBackColor |
                     ControlStyles.OptimizedDoubleBuffer |
                     ControlStyles.AllPaintingInWmPaint |
                     ControlStyles.ResizeRedraw |
                     ControlStyles.UserPaint, true);
-            BackColor = Color.Transparent;
+            InitializeComponent();
             Resize += (s, e) => Resized();
             MarginChanged += (s, e) => Resized();
             animationTimer = new System.Windows.Forms.Timer();
@@ -59,6 +58,8 @@ namespace Yordi.Controls
         private void InitializeComponent()
         {
             lineColor = Color.Black;
+            Margin = new Padding(0);
+            BackColor = Color.Transparent;
             //lineThickness = 2;
             //lineBlink = lineThickness * 2;
         }

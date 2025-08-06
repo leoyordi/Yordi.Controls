@@ -43,16 +43,12 @@ namespace Yordi.Controls
             else if (ctrl is SplitContainer)
                 Limpa(ctrl);
 
-            else if (ctrl is UserControl)
-                Limpa(ctrl);
-
-            else if (ctrl is ComboBox)
+            else if (ctrl is ComboBox cmb)
             {
                 int i = 0;
-                ComboBox b = (ComboBox)ctrl;
-                while (b.SelectedIndex != -1 && i < 100)
+                while (cmb.SelectedIndex != -1 && i < 100)
                 {
-                    b.SelectedIndex = -1;
+                    cmb.SelectedIndex = -1;
                     i++;
                 }
             }
@@ -71,12 +67,12 @@ namespace Yordi.Controls
             else if (ctrl is IText myTxt)
                 myTxt.Text = string.Empty;
 
-            else if (ctrl is MaskedTextBox)
-                ((MaskedTextBox)ctrl).Text = String.Empty;
+            else if (ctrl is MaskedTextBox msk)
+                msk.Text = String.Empty;
 
 
-            else if (ctrl is RadioButton)
-                ((RadioButton)ctrl).Checked = false;
+            else if (ctrl is RadioButton rd)
+                rd.Checked = false;
 
             else if (ctrl is CheckBox chk)
             {
@@ -93,27 +89,26 @@ namespace Yordi.Controls
                 myChk.AutoCheck = b;
             }
 
-            else if (ctrl is DataGridView)
+            else if (ctrl is DataGridView c)
             {
-                var c = (DataGridView)ctrl;
                 c.Rows.Clear();
                 c.DataSource = null;
                 c.Invalidate();
             }
 
-            else if (ctrl is DateTimePicker)
-                ((DateTimePicker)ctrl).Value = DataPadrao.Brasilia;
+            else if (ctrl is DateTimePicker dt)
+                dt.Value = DataPadrao.Brasilia;
 
-            else if (ctrl is PictureBox)
-                ((PictureBox)ctrl).Image = null;
+            else if (ctrl is PictureBox pb)
+                pb.Image = null;
             else if (ctrl is IImage img)
-            {
-                img.Image = null;                
-            }
+                img.Image = null;
 
-            else if (ctrl is NumericUpDown)
-                ((NumericUpDown)ctrl).Value = 0;
+            else if (ctrl is NumericUpDown ud)
+                ud.Value = 0;
 
+            else if (ctrl is UserControl)
+                Limpa(ctrl);
 
         }
     }
@@ -177,8 +172,8 @@ namespace Yordi.Controls
             //if (string.IsNullOrEmpty(t) || (ctrl.Tag != null && ctrl.Tag.ToString().Contains(t)))
             //    return;
 
-            if (ctrl is DateTimePicker)
-                ((DateTimePicker)ctrl).Enabled = status;
+            if (ctrl is DateTimePicker dt)
+                dt.Enabled = status;
 
             if (ctrl is TextBox txt)
                 txt.ReadOnly = !status;
@@ -252,6 +247,14 @@ namespace Yordi.Controls
                 else
                     cmb.SelectedValue = valor;
             }
+            else if (control is ISelectedIndex ind)
+            {
+                if (valor == null)
+                    ind.SelectedIndex = -1;
+                else
+                    ind.SelectedValue = valor;
+            }
+
             else if (control is ICheckBox chk)
             {
                 if (valor == null)

@@ -52,7 +52,6 @@
             lineControl1.HabilitaDimensionar = true;
             lineControl1.LineColor = Color.Black;
             lineControl1.Location = new Point(203, 82);
-            lineControl1.Margin = new Padding(0);
             lineControl1.Name = "lineControl1";
             lineControl1.Opacity = 100;
             lineControl1.Orientation = LineOrientation.Horizontal;

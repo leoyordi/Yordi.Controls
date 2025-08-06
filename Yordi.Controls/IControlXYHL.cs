@@ -30,6 +30,7 @@ namespace Yordi.Controls
         bool HasClickSubscribers { get; }
         int BorderWidth { get; set; }
         Rectangle AreaPath { get; set; }
+        RectangleEdgeFilter BorderEdges { get; set; }
 
         void MenuDimensionarClick(object? sender, EventArgs e);
         void MenuMoveClick(object? sender, EventArgs e);

@@ -24,6 +24,7 @@
     public interface ISelectedIndex : IEnabled
     {
         int SelectedIndex { get; set; }
+        object? SelectedValue { get; set; }
     }
     public interface ICheckBox : IEnabled, ITag
     {
