@@ -73,7 +73,7 @@
             pb.BorderRadius = 5;
             pb.BorderStyle = BorderStyle.None;
             pb.BorderWidth = 0;
-            pb.ColorProgressPoint = Color.Yellow;
+            pb.ColorProgressPoint = Color.MidnightBlue;
             pb.ColorTextByContrast = true;
             pb.HabilitaArrastar = false;
             pb.HabilitaDimensionar = false;
@@ -86,7 +86,7 @@
             pb.Orientation = LineOrientation.Horizontal;
             pb.Padding = new Padding(1);
             pb.Progress = new decimal(new int[] { 10, 0, 0, 0 });
-            pb.ProgressPointType = ProgressPointType.PointOrCircle;
+            pb.ProgressPointType = ProgressPointType.Bar;
             pb.ShowPercentage = true;
             pb.ShowText = false;
             pb.Size = new Size(255, 17);

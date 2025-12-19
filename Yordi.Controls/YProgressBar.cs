@@ -483,7 +483,8 @@ namespace Yordi.Controls
                 graphics.FillRoundedRectangle(progressBrush, barValue, BorderRadius);
 
             if (ColorTextByContrast)
-                DrawText(graphics, progressPosition, colorProgressPoint, ClientRectangle, barValue, barDiff);
+                DrawTextForDashAndCircle(graphics, barValue);
+                //DrawText(graphics, progressPosition, colorProgressPoint, ClientRectangle, barValue, barDiff);
             else
                 DrawText(graphics);
         }
