@@ -83,13 +83,14 @@
 
 
 ### Version History
+* 1.1.6.2 - Correção e aprimoramento do controle `YProgressBar` para tratamento de contraste ao desenhar o texto. Agora, quando a propriedade `ColorTextByContrast` está definida como `true`, o texto exibido na barra de progresso é automaticamente ajustado para garantir contraste adequado com o fundo e a cor da barra, melhorando a legibilidade em diferentes combinações de cores.
 * 1.1.6.1 - Melhoramento do controle LineControl. Antialising foi retirado para evitar bordas falsas.
 * 1.1.6 - Acréscimo da propriedade ```RectangleEdgeFilter BorderEdges``` na interface ```IControlXYHL```, que define quais bordas do controle serão filtradas para o efeito de borda arredondada.
     Propriedade já era implementada em ```ControlXYHL``` e ```UserControlXYHL```, mas não estava na interface.
     Correções na ordem de verificação de tipo de controle em ```LimpaCampos```, ```HabilitaCampos``` e ```AtualizaControlesIndexados```
 * 1.1.5.3a5 - Ajustes na propriedade ```Padding``` de ```LineControl```, que não estava funcionando corretamente (Overflow Exception).
 * 1.1.5 - Acréscimo da propriedade ```ColorTextByContrast``` em ```DataGridViewProgressbarColumn```, que define se o texto da barra de progresso deve ser colorido de acordo 
-com o contraste do fundo ou se baseado na propriedade ```ForeColor```.    
+com o contraste do fundo ou se baseado na propriedade ```ForeColor```.
 * 1.1.4 - Acréscimo de utilização da propriedade ```BorderRadius``` em ```YProgressBar```.
 * 1.1.3 - Acréscimo de propriedade interna em ```YProgressBar``` para aceitar o valor real do progresso, e não apenas o limite de valor máximo. 
     Isso permite que o controle seja usado como um indicador de progresso, e não apenas como uma barra de progresso.
