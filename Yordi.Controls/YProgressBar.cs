@@ -226,6 +226,82 @@ namespace Yordi.Controls
         /// </summary>
         public bool ColorTextByContrast { get; set; } = false;
 
+        private bool inProgress = false;
+        /// <summary>
+        /// Indica que a operação representada pela barra ainda está em andamento
+        /// (o veredito sobre o valor ainda é pendente).
+        /// <para>
+        /// Quando <see langword="true"/>, a barra é pintada inteiramente com
+        /// <see cref="InProgressColor"/> e os <see cref="ColorRanges"/> são ignorados.
+        /// Quando <see langword="false"/>, a cor é resolvida avaliando o valor atual
+        /// contra os <see cref="ColorRanges"/> (comportamento padrão/legado).
+        /// </para>
+        /// Default: <see langword="false"/>.
+        /// </summary>
+        public bool InProgress
+        {
+            get => inProgress;
+            set { inProgress = value; Invalidate(); }
+        }
+
+        private Color inProgressColor = Color.Orange;
+        /// <summary>
+        /// Cor chapada usada para pintar toda a barra enquanto
+        /// <see cref="InProgress"/> for <see langword="true"/>. Default: <see cref="Color.Orange"/>.
+        /// </summary>
+        public Color InProgressColor
+        {
+            get => inProgressColor;
+            set { inProgressColor = value; if (inProgress) Invalidate(); }
+        }
+
+        /// <summary>
+        /// Gets or sets the default collection of color ranges used by cells in this column.
+        /// </summary>
+        public List<ProgressBarColorRange> DefaultColorRanges { get; set; } = new()
+        {
+            new ProgressBarColorRange { Min = 0, Max = 90, Color = Color.GreenYellow },
+            new ProgressBarColorRange { Min = 90, Max = 100, Color = Color.Orange },
+            new ProgressBarColorRange { Min = 100, Max = 110, Color = Color.Red },
+            new ProgressBarColorRange { Min = 110, Max = int.MaxValue, Color = Color.Purple }
+        };
+        /// <summary>
+        /// Gets or sets the collection of color ranges used to determine the visual representation of the progress bar
+        /// based on its value.
+        /// </summary>
+        public List<ProgressBarColorRange>? ColorRanges { get; set; }
+
+        /// <summary>
+        /// Retorna os ranges efetivos: da instância, ou o DefaultColorRanges, ou null se nenhum.
+        /// </summary>
+        private List<ProgressBarColorRange>? GetEffectiveColorRanges()
+        {
+            if (ColorRanges != null && ColorRanges.Count > 0)
+                return ColorRanges;
+
+            if (DefaultColorRanges != null && DefaultColorRanges.Count > 0)
+                return DefaultColorRanges;
+
+            return null;
+        }
+
+        /// <summary>
+        /// Retorna a cor efetiva do ponto de progresso baseada no estado atual.
+        /// Se <see cref="InProgress"/> estiver ativo, retorna <see cref="InProgressColor"/>
+        /// (barra chapada). Caso contrário, avalia o valor atual contra os ranges;
+        /// se não houver ranges configurados, retorna ColorProgressPoint.
+        /// </summary>
+        private Color GetEffectiveColor()
+        {
+            if (inProgress) return inProgressColor;
+
+            var ranges = GetEffectiveColorRanges();
+            if (ranges == null) return colorProgressPoint;
+
+            var range = ranges.FirstOrDefault(r => r.IsInRange((float)_progressRealValue));
+            return range?.Color ?? colorProgressPoint;
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -284,7 +360,8 @@ namespace Yordi.Controls
                 ? new Rectangle(realPosition, Margin.Top, diameter, diameter)
                 : new Rectangle(Margin.Left, (Height - diameter) - realPosition, diameter, diameter);
 
-            using (Brush progressBrush = new SolidBrush(colorProgressPoint))
+            var effectiveColor = GetEffectiveColor(); // <── aqui
+            using (Brush progressBrush = new SolidBrush(effectiveColor))
                 graphics.FillEllipse(progressBrush, circleRect);
             if (ColorTextByContrast)
                 DrawTextForDashAndCircle(graphics, circleRect);
@@ -313,18 +390,38 @@ namespace Yordi.Controls
             }
             Rectangle dashRect = new Rectangle(x, y, w, h);
 
-            using (Brush progressBrush = new SolidBrush(colorProgressPoint))
-            {
+            var effectiveColor = GetEffectiveColor(); // <── aqui
+            using (Brush progressBrush = new SolidBrush(effectiveColor))
                 graphics.FillRectangle(progressBrush, dashRect);
-            }
+
             if (ColorTextByContrast)
                 DrawTextForDashAndCircle(graphics, dashRect);
             else
                 DrawText(graphics);
         }
 
+        // Substitua DrawText(Graphics) - troca TextRenderer (GDI) por DrawString (GDI+)
+        private void DrawText(Graphics graphics)
+        {
+            if (!showText && !showPercentage) return;
+            string progressText = string.Empty;
+            if (showPercentage)
+                progressText = _progressRealValue.ToString("0.##") + "%";
+            else if (showText)
+                progressText = text;
+
+            using var sf = new StringFormat
+            {
+                Alignment = StringAlignment.Center,
+                LineAlignment = StringAlignment.Center
+            };
+            using var brush = new SolidBrush(ForeColor);
+            graphics.DrawString(progressText, Font, brush, (RectangleF)ClientRectangle, sf);
+        }
+
         private void DrawTextForDashAndCircle(Graphics graphics, Rectangle dashRect)
         {
+            if (!showText && !showPercentage) return;
             string progressText = showPercentage
                                 ? _progressRealValue.ToString("0.##") + "%"
                                 : text;
@@ -334,7 +431,6 @@ namespace Yordi.Controls
                 LineAlignment = StringAlignment.Center
             })
             {
-                // Medir área do texto
                 SizeF textSize = graphics.MeasureString(progressText, Font, ClientRectangle.Size, sf);
                 Rectangle textRect = new Rectangle(
                     ClientRectangle.X + (ClientRectangle.Width - (int)textSize.Width) / 2,
@@ -342,17 +438,18 @@ namespace Yordi.Controls
                     (int)textSize.Width,
                     (int)textSize.Height);
 
-                // 1. Desenha texto com ForeColor (background)
-                Color normalColorText = GraphicsExtension.GetContrastingTextColor(BackColor);
+                // 1. Desenha texto com contraste sobre o fundo geral
+                Color normalColorText = GraphicsExtension.GetContrastingTextColor(backgroundColor);
                 graphics.DrawString(progressText, Font, new SolidBrush(normalColorText), ClientRectangle, sf);
 
-                // 2. Se houver interseção, desenha texto sobreposto com cor contrastante ao dash
+                // 2. Clip na interseção: contraste sobre a cor efetiva (range ou colorProgressPoint)
                 Rectangle intersectRect = Rectangle.Intersect(textRect, dashRect);
                 if (!intersectRect.IsEmpty)
                 {
                     Region oldClip = graphics.Clip;
                     graphics.SetClip(intersectRect);
-                    Color contrastColor = GraphicsExtension.GetContrastingTextColor(colorProgressPoint);
+                    Color effectiveColor = GetEffectiveColor(); // <── corrigido
+                    Color contrastColor = GraphicsExtension.GetContrastingTextColor(effectiveColor);
                     graphics.DrawString(progressText, Font, new SolidBrush(contrastColor), ClientRectangle, sf);
                     graphics.SetClip(oldClip, CombineMode.Replace);
                 }
@@ -402,20 +499,6 @@ namespace Yordi.Controls
             int g = (int)(c1.G + (c2.G - c1.G) * ratio);
             int b = (int)(c1.B + (c2.B - c1.B) * ratio);
             return Color.FromArgb(r, g, b);
-        }
-
-        private void DrawText(Graphics graphics)
-        {
-            if (!showText && !showPercentage) return;
-            string progressText = string.Empty;
-            if (showPercentage) 
-                progressText = _progressRealValue.ToString("0.##") + "%";
-            else if (showText)
-                progressText = text;
-            
-            
-            TextRenderer.DrawText(graphics, progressText, Font, ClientRectangle, ForeColor,
-                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.WordBreak);
         }
 
         private void DrawText(Graphics g, float progressVal, Color barColor, Rectangle cellBounds, Rectangle barValue, Rectangle barDiff)
@@ -479,12 +562,12 @@ namespace Yordi.Controls
                 ? new Rectangle(Margin.Left + progressPosition, barValue.Y, w - progressPosition, h)
                 : new Rectangle(Margin.Left, Margin.Top + progressPosition, w, h - progressPosition);
 
-            using (Brush progressBrush = new SolidBrush(colorProgressPoint))
+            var effectiveColor = GetEffectiveColor(); // <── aqui
+            using (Brush progressBrush = new SolidBrush(effectiveColor))
                 graphics.FillRoundedRectangle(progressBrush, barValue, BorderRadius);
 
             if (ColorTextByContrast)
                 DrawTextForDashAndCircle(graphics, barValue);
-                //DrawText(graphics, progressPosition, colorProgressPoint, ClientRectangle, barValue, barDiff);
             else
                 DrawText(graphics);
         }
@@ -495,14 +578,39 @@ namespace Yordi.Controls
                 ? LinearGradientMode.Horizontal
                 : LinearGradientMode.Vertical;
             barRect = GetBarRectangle();
-            //int position = infinite ? animationOffset : (int)(Width * (progress / maximum));
-            using (LinearGradientBrush brush = new LinearGradientBrush(barRect.Value, Color.White, colorProgressPoint, linearOrientation))
+
+            var effectiveColor = GetEffectiveColor();
+
+            // O gradiente parte de branco (ou a cor de fundo) até a cor efetiva
+            Color gradientStart = backgroundColor == Color.Transparent ? Color.White : backgroundColor;
+
+            using (LinearGradientBrush brush = new LinearGradientBrush(barRect.Value, gradientStart, effectiveColor, linearOrientation))
             {
                 brush.TranslateTransform(progressPosition, 0);
                 graphics.FillRoundedRectangle(brush, barRect.Value, BorderRadius);
-                //DrawTextOverGradient(graphics, barRect.Value, brush);
             }
-            DrawText(graphics);
+
+            if (ColorTextByContrast)
+            {
+                // Usa a cor intermediária do gradiente (ponto central) para calcular o contraste
+                // pois o texto está centralizado sobre o gradiente
+                float midRatio = 0.5f;
+                int r = (int)(gradientStart.R + (effectiveColor.R - gradientStart.R) * midRatio);
+                int g2 = (int)(gradientStart.G + (effectiveColor.G - gradientStart.G) * midRatio);
+                int b = (int)(gradientStart.B + (effectiveColor.B - gradientStart.B) * midRatio);
+                Color midColor = Color.FromArgb(r, g2, b);
+
+                Color contrastColor = GraphicsExtension.GetContrastingTextColor(midColor);
+                if (!showText && !showPercentage) return;
+                string progressText = showPercentage ? _progressRealValue.ToString("0.##") + "%" : text;
+                using var sf = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center };
+                using var brush = new SolidBrush(contrastColor);
+                graphics.DrawString(progressText, Font, brush, (RectangleF)ClientRectangle, sf);
+            }
+            else
+            {
+                DrawText(graphics);
+            }
         }
 
         private void AnimationTimer_Tick(object? sender, EventArgs e)

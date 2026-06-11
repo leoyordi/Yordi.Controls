@@ -16,6 +16,7 @@ namespace Yordi.Controls.Testes
             pb.Infinite = false;
             pb.ForeColor = Color.White;
             pb.ShowText = true;
+            pb.ColorRanges = cores.ToList();
             timer.Interval = 100;
             timer.Tick += TimerProgressBar_Tick;
             timer.Start();
@@ -32,17 +33,17 @@ namespace Yordi.Controls.Testes
                 tt.SetToolTip(control, texto);
         }
 
-
-        private void LoadDataGridViewProgressColumn()
-        {
-            var cores = new List<ProgressBarColorRange>()
+        private List<ProgressBarColorRange> cores = new List<ProgressBarColorRange>()
                         {
-                            new ProgressBarColorRange { Min = 0, Max = 90, Color = Laranja },
+                            new ProgressBarColorRange { Min = 0, Max = 90, Color = Color.FromArgb(236, 133, 0) },
                             new ProgressBarColorRange { Min = 90, Max = 97, Color = Color.Yellow },
                             new ProgressBarColorRange { Min = 97.1f, Max = 103, Color = Color.FromArgb(100,221,23) },
                             new ProgressBarColorRange { Min = 103.1f, Max = 110, Color = Color.Yellow },
                             new ProgressBarColorRange { Min = 103.1f, Max = int.MaxValue, Color = Color.Red }
                         };
+
+        private void LoadDataGridViewProgressColumn()
+        {
             DataGridViewProgressColumn column = new DataGridViewProgressColumn() { DefaultColorRanges = cores, DecrementViewerValue = false };
 
             dgv.ColumnCount = 2;
@@ -97,21 +98,21 @@ namespace Yordi.Controls.Testes
         {
             pb.Progress = progress;
             pb.Text = $"{progress}%";
-            if (progress >= 97 && progress <= 103)
-            {
-                pb.ColorProgressPoint = Color.Green;
-                pb.Text = "OK";
-            }
-            else if (progress >= 90 && progress <= 110)
-            {
-                pb.ColorProgressPoint = Color.Yellow;
-                pb.Text = "Atenção";
-            }
-            else
-            {
-                pb.ColorProgressPoint = Laranja;
-                pb.Text = "Fora do padrão";
-            }
+            //if (progress >= 97 && progress <= 103)
+            //{
+            //    pb.ColorProgressPoint = Color.Green;
+            //    pb.Text = "OK";
+            //}
+            //else if (progress >= 90 && progress <= 110)
+            //{
+            //    pb.ColorProgressPoint = Color.Yellow;
+            //    pb.Text = "Atenção";
+            //}
+            //else
+            //{
+            //    pb.ColorProgressPoint = Laranja;
+            //    pb.Text = "Fora do padrão";
+            //}
             foreach (DataGridViewRow row in dgv.Rows)
             {
                 row.Cells[2].Value = progress;

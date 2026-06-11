@@ -29,6 +29,7 @@
 	* Tooltip personalizado, usando o tema passado para CurrentTooltipTheme.
 	* Linha horizontal ou vertical, com animação de blink, gradient e circle.
 	* DataGridViewProgressbarColumn - coluna de progress bar para DataGridView, com range de cores a ser definida pelo programador.
+	* Modo "em andamento" (`InProgress`) em `YProgressBar` e `DataGridViewProgressCell`: enquanto a operação está em curso a barra é pintada com uma cor chapada (`InProgressColor`, default laranja) e, ao concluir, passa a avaliar o valor pelos `ColorRanges`.
 
 
 ## Exemplo de uso
@@ -83,7 +84,25 @@
 
 
 ### Version History
-* 1.1.6.2 - Correção e aprimoramento do controle `YProgressBar` para tratamento de contraste ao desenhar o texto. Agora, quando a propriedade `ColorTextByContrast` está definida como `true`, o texto exibido na barra de progresso é automaticamente ajustado para garantir contraste adequado com o fundo e a cor da barra, melhorando a legibilidade em diferentes combinações de cores.
+* 1.1.9 - Modelo de cor por estado
+
+```csharp
+    // Uso típico: laranja enquanto carrega; cor de tolerância quando concluir.
+    pb.InProgressColor = Color.Orange;
+    pb.ColorRanges = coresDeTolerancia; // avaliados só quando InProgress == false
+    pb.InProgress = estaCarregando;     // alterna entre laranja chapado e ranges
+    pb.Progress = porcentagem;
+
+    // Numa célula de grid (setado por linha junto dos ColorRanges):
+    if (row.Cells[idx] is DataGridViewProgressCell cell)
+    {
+        cell.ColorRanges = coresDeTolerancia;
+        cell.InProgress = item.Carregando;
+    }
+```
+* 1.1.8 - Acréscimo de `ColorRanges` e `DefaultColorRanges` em `YProgressBar`, permitindo definir ranges de cores para a barra de progresso com base no valor atual do progresso. A cor do ponto de progresso (`ColorProgressPoint`) é automaticamente determinada pelo range correspondente ao valor atual, com fallback para a cor definida manualmente. Correção do z-order do texto: substituição de `TextRenderer.DrawText` (GDI) por `graphics.DrawString` (GDI+) para evitar interferência com o desenho da barra. Correção da cor de contraste do texto no modo `Gradient`: agora calcula o contraste sobre a cor central do gradiente. Correção da cor de contraste em `DrawTextForDashAndCircle`: usa a cor efetiva do range em vez de `colorProgressPoint`.
+* 1.1.7 - Reescrita completa do `YTooltip`. Correção crítica para .NET 8: a propriedade `IsBalloon` é ocultada pois, quando `true`, suprime o evento `Draw` internamente mesmo com `OwnerDraw = true`. Adicionados P/Invoke (`WindowFromDC`, `SetWindowRgn`) para recortar nativamente os cantos arredondados da janela do tooltip. Desenho refeito com `GraphicsPath`, `SmoothingMode.AntiAlias`, `FillPath` e `DrawPath`. Adicionado método `DrawBalloon` com seta dinâmica centralizada no controle associado. Construtor padrão corrigido para usar `CurrentTooltipTheme` em vez de cores fixas. `HideTooltip` limpa `sender` e `controlPosition` para evitar estado obsoleto. `radius` aumentado de 5 para 10.
+* 1.1.6.2 -
 * 1.1.6.1 - Melhoramento do controle LineControl. Antialising foi retirado para evitar bordas falsas.
 * 1.1.6 - Acréscimo da propriedade ```RectangleEdgeFilter BorderEdges``` na interface ```IControlXYHL```, que define quais bordas do controle serão filtradas para o efeito de borda arredondada.
     Propriedade já era implementada em ```ControlXYHL``` e ```UserControlXYHL```, mas não estava na interface.

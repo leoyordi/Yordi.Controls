@@ -31,6 +31,12 @@ namespace Yordi.Controls
         public bool DecrementViewerValue { get; set; } = false;
         public bool ColorTextByContrast { get; set; } = false;
 
+        /// <summary>
+        /// Cor chapada padrão herdada pelas células novas quando elas estão
+        /// <see cref="DataGridViewProgressCell.InProgress"/>. Default: <see cref="Color.Orange"/>.
+        /// </summary>
+        public Color InProgressColor { get; set; } = Color.Orange;
+
         public DataGridViewProgressColumn()
         {
             CellTemplate = new DataGridViewProgressCell();
@@ -74,6 +80,24 @@ namespace Yordi.Controls
         }
         private bool _colorTextByContrast = false;
 
+        /// <summary>
+        /// Indica que a carga representada por esta célula ainda está em andamento.
+        /// <para>
+        /// Quando <see langword="true"/>, a barra é pintada inteiramente com
+        /// <see cref="InProgressColor"/> e os <see cref="ColorRanges"/> são ignorados.
+        /// Quando <see langword="false"/>, a cor é resolvida avaliando o valor da célula
+        /// contra os <see cref="ColorRanges"/> (comportamento padrão/legado).
+        /// </para>
+        /// Default: <see langword="false"/>.
+        /// </summary>
+        public bool InProgress { get; set; } = false;
+
+        /// <summary>
+        /// Cor chapada usada enquanto <see cref="InProgress"/> for <see langword="true"/>.
+        /// Default: <see cref="Color.Orange"/>.
+        /// </summary>
+        public Color InProgressColor { get; set; } = Color.Orange;
+
         // Fallback padrão caso nem célula nem coluna tenham ranges definidos
         private static readonly List<ProgressBarColorRange> fallbackColorRanges = new()
         {
@@ -112,6 +136,35 @@ namespace Yordi.Controls
         {
             var range = GetEffectiveColorRanges().FirstOrDefault(r => r.IsInRange(value));
             return range?.Color ?? Color.GreenYellow;
+        }
+
+        /// <summary>
+        /// Cor chapada efetiva para o estado "em andamento": a da célula tem prioridade;
+        /// se for o default e a coluna definir outra, usa a da coluna.
+        /// </summary>
+        private Color GetInProgressColor()
+        {
+            if (InProgressColor != Color.Orange)
+                return InProgressColor;
+            if (this.OwningColumn is DataGridViewProgressColumn col)
+                return col.InProgressColor;
+            return InProgressColor;
+        }
+
+        /// <summary>
+        /// Copia as propriedades customizadas ao clonar a célula (necessário pois o
+        /// DataGridView clona o template/células e, sem isto, InProgress, ColorRanges
+        /// e demais flags seriam perdidos).
+        /// </summary>
+        public override object Clone()
+        {
+            var c = (DataGridViewProgressCell)base.Clone();
+            c.ColorRanges = ColorRanges;
+            c.InProgress = InProgress;
+            c.InProgressColor = InProgressColor;
+            c._colorTextByContrast = _colorTextByContrast;
+            c._decrementViewerValue = _decrementViewerValue;
+            return c;
         }
 
         // Method required to make the Progress Cell consistent with the default Image Cell. 
@@ -155,7 +208,7 @@ namespace Yordi.Controls
                     var limit = Math.Min(percentage, 1.0f);
                     var widthValue = Convert.ToInt32((limit * cellBounds.Width - 4));
                     var barValue = new Rectangle(cellBounds.X + 2, cellBounds.Y + 2, widthValue, cellBounds.Height - 4);
-                    var barColor = GetColorForValue(progressVal);
+                    var barColor = InProgress ? GetInProgressColor() : GetColorForValue(progressVal);
                     using var barBrush = new SolidBrush(barColor);
                     g.FillRectangle(barBrush, barValue);
 

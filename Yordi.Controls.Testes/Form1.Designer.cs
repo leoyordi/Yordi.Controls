@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
             lineControl1 = new LineControl();
             pb = new YProgressBar();
             yRoundProgressBar1 = new YRoundProgressBar();
@@ -74,10 +75,13 @@
             pb.BorderStyle = BorderStyle.None;
             pb.BorderWidth = 0;
             pb.ColorProgressPoint = Color.MidnightBlue;
+            pb.ColorRanges = null;
             pb.ColorTextByContrast = true;
             pb.HabilitaArrastar = false;
             pb.HabilitaDimensionar = false;
             pb.Infinite = true;
+            pb.InProgress = true;
+            pb.InProgressColor = Color.Orange;
             pb.Location = new Point(89, 363);
             pb.Margin = new Padding(1);
             pb.Maximum = new decimal(new int[] { 100, 0, 0, 0 });
@@ -86,7 +90,7 @@
             pb.Orientation = LineOrientation.Horizontal;
             pb.Padding = new Padding(1);
             pb.Progress = new decimal(new int[] { 10, 0, 0, 0 });
-            pb.ProgressPointType = ProgressPointType.Bar;
+            pb.ProgressPointType = ProgressPointType.Gradient;
             pb.ShowPercentage = true;
             pb.ShowText = false;
             pb.Size = new Size(255, 17);
